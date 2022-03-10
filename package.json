@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "botbuilder": "^4.15.0",
+    "botbuilder-dialogs": "^4.15.0",
+    "dotenv": "^16.0.0",
+    "restify": "^8.6.1"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/node": "^17.0.21",
+    "@types/restify": "^8.5.4"
+  }
+}
