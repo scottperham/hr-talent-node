@@ -106,6 +106,14 @@ export class InterviewService extends DataService<Interview> {
         super("interviews")
     }
 
+    public scheduleInterview(candidateId: number, recruiterId: number, interviewDate: Date, interviewType: string, isRemote: boolean) {
+        this.data.push({
+            candidateId,
+            id: this.getNextId(),
+            interviewDate,
+            recruiterId
+        });
+    }
 }
 
 export class LocationService extends DataService<Location> {
@@ -145,14 +153,15 @@ export class TemplatingService {
         this.candidateTemplate = fs.readFileSync(path.join(templatesPath, "candidateTemplate.json")).toString();
     }
 
-    public getCandidateTemplate(candidate: Candidate, recruiters: Recruiter[]) : any {
+    public getCandidateTemplate(candidate: Candidate, recruiters: Recruiter[], status?: string) : any {
         this.candidateTemplate = fs.readFileSync(path.join(this.templatesPath, "candidateTemplate.json")).toString();
         const template = new act.Template(JSON.parse(this.candidateTemplate));
         const payload = template.expand({
             $root: {
                 ...candidate, 
                 recruiters,
-                hasComments: candidate.comments && candidate.comments.length > 0
+                hasComments: candidate.comments && candidate.comments.length > 0,
+                status: status || ""
             }
         });
 

@@ -69,8 +69,8 @@ export type Position = IdentifiableEntity & {
 
 export type Interview = IdentifiableEntity & {
     interviewDate: Date
-    feedbackText: string
+    feedbackText?: string
     candidateId: number
     recruiterId: number
-    recruiter: Recruiter
+    recruiter?: Recruiter
 }

@@ -1,8 +1,10 @@
-import { ConversationState, TeamsActivityHandler, TurnContext, UserState, ActivityEx, FileDownloadInfo, Activity, SigninStateVerificationQuery, MessageFactory, CardFactory } from "botbuilder";
+import { parseBool } from "adaptivecards";
+import { ConversationState, TeamsActivityHandler, TurnContext, UserState, ActivityEx, FileDownloadInfo, Activity, SigninStateVerificationQuery, MessageFactory, CardFactory, AdaptiveCardInvokeResponse, AdaptiveCardInvokeValue, InvokeResponse } from "botbuilder";
 import { randomUUID } from "crypto";
 import { CommandBase } from "../commands/commandBase";
 import { CandidateDetailsCommand, HelpCommand } from "../commands/helpCommand";
 import { CandidateService, InterviewService, LocationService, PositionService, RecruiterService, ServiceContainer, TemplatingService } from "../services/data/candidateService";
+import { Candidate } from "../services/data/dtos";
 import { InvokeActivityHandler } from "../services/invokeActivityHandler";
 import { TokenProvider } from "../services/tokenProvider";
 export class TeamsTalentMgmtBot extends TeamsActivityHandler {
@@ -11,6 +13,7 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
     conversationState: ConversationState;
     invokeHandler: InvokeActivityHandler;
     commands: {command: CommandBase, requireAuth: boolean}[];
+    services: ServiceContainer;
 
     constructor(
         userState: UserState, 
@@ -20,6 +23,7 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
 
         this.userState = userState;
         this.conversationState = conversationState;
+        this.services = services;
 
         const tokenProvider = new TokenProvider(userState);
 
@@ -70,7 +74,18 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
             }
 
             await next();
-        })
+        });
+
+        // this.oninv(async (context, next): Promise<void> => {
+
+        //     if (!context.activity.value?.commandId) {
+        //         return;
+        //         await next();
+        //     }
+
+        //     console.log(context.activity.value.commandId);
+        //     await next();
+        // });
     }
 
     async run(context: TurnContext): Promise<void> {
@@ -78,6 +93,49 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
 
         await this.userState.saveChanges(context);
         await this.conversationState.saveChanges(context);
+    }
+
+    protected onAdaptiveCardInvoke(context: TurnContext, invokeValue: AdaptiveCardInvokeValue): Promise<AdaptiveCardInvokeResponse> {
+        
+        let candidate: Candidate;
+
+        switch(invokeValue.action.data.commandId) {
+            case "LeaveComment":
+                candidate = <Candidate>this.services.candidateService.getById(parseInt(<string>invokeValue.action.data.candidateId));
+                (candidate.comments || (candidate.comments = [])).push({
+                    authorName: "sadf",
+                    authorProfilePicture: "",
+                    authorRole: "",
+                    candidateId: candidate.id,
+                    text: <string>invokeValue.action.data.comment,
+                    id: 0
+                })
+                return Promise.resolve({
+                    type: CardFactory.contentTypes.adaptiveCard,
+                    statusCode: 200,
+                    value: this.services.templatingService.getCandidateTemplate(candidate, this.services.recruiterService.getAll(), "Comment added")
+                });
+            case "ScheduleInterview":
+                candidate = <Candidate>this.services.candidateService.getById(parseInt(<string>invokeValue.action.data.candidateId));
+                this.services.interviewService.scheduleInterview(
+                    parseInt(<string>invokeValue.action.data.candidateId), 
+                    parseInt(<string>invokeValue.action.data.interviewId), 
+                    new Date(<string>invokeValue.action.data.interviewDate), 
+                    <string>invokeValue.action.data.interviewType, 
+                    <boolean>parseBool(<string>invokeValue.action.data.isRemote));
+
+                return Promise.resolve({
+                    type: CardFactory.contentTypes.adaptiveCard,
+                    statusCode: 200,
+                    value: this.services.templatingService.getCandidateTemplate(candidate, this.services.recruiterService.getAll(), "Interview scheduled")
+                });
+        }
+
+        return Promise.resolve({
+            type: "",
+            statusCode: 200,
+            value: {}
+        });
     }
 
     protected async handleTeamsSigninTokenExchange(context: TurnContext, query: SigninStateVerificationQuery): Promise<void> {

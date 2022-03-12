@@ -65,6 +65,15 @@
                     "value": "${phone}"
                 }
             ]
+        },
+        {
+            "type": "TextBlock",
+            "wrap": true,
+            "text": "${status}",
+            "$when": "${status != ''}",
+            "color": "good",
+            "horizontalAlignment":"center",
+            "weight":"bolder"
         }
     ],
     "actions": [
@@ -160,9 +169,13 @@
                         "type": "ActionSet",
                         "actions": [
                             {
-                                "type": "Action.Submit",
+                                "type": "Action.Execute",
                                 "title": "Schedule",
-                                "style": "positive"
+                                "style": "positive",
+                                "data": {
+                                    "candidateId": "${id}",
+                                    "commandId": "ScheduleInterview"
+                                }
                             }
                         ]
                     }
@@ -191,9 +204,13 @@
                         "type": "ActionSet",
                         "actions": [
                             {
-                                "type": "Action.Submit",
+                                "type": "Action.Execute",
                                 "title": "Submit",
-                                "style": "positive"
+                                "style": "positive",
+                                "data": {
+                                    "candidateId": "${id}",
+                                    "commandId": "LeaveComment"
+                                }
                             }
                         ]
                     }
