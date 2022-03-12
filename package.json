@@ -1,7 +1,8 @@
 {
   "dependencies": {
+    "adaptivecards": "^2.10.0",
+    "adaptivecards-templating": "^2.2.0",
     "botbuilder": "^4.15.0",
-    "botbuilder-dialogs": "^4.15.0",
     "dotenv": "^16.0.0",
     "restify": "^8.6.1"
   },

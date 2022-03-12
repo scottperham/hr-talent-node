@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 import * as restify from 'restify';
 import { CloudAdapter, ConfigurationServiceClientCredentialFactory, ConfigurationBotFrameworkAuthentication, MemoryStorage, ConversationState, UserState } from 'botbuilder';
 import { TeamsTalentMgmtBot } from './bots/bot';
+import { CandidateService, InterviewService, LocationService, PositionService, RecruiterService, ServiceContainer, TemplatingService } from './services/data/candidateService';
 
 const env_file = path.join(__dirname, "..", ".env");
 dotenv.config({path: env_file});
@@ -37,7 +38,23 @@ const memoryStorage = new MemoryStorage();
 const conversationState = new ConversationState(memoryStorage);
 const userState = new UserState(memoryStorage);
 
-const bot = new TeamsTalentMgmtBot(userState, conversationState);
+const sampleDataPath = path.join(__dirname, "..", "src\\sampleData");
+const templatePath = path.join(__dirname, "..", "src\\templates");
+
+const candidateService = new CandidateService(); candidateService.load(sampleDataPath);
+const interviewService = new InterviewService(); interviewService.load(sampleDataPath);
+const locationService = new LocationService(); locationService.load(sampleDataPath);
+const positionService = new PositionService(); positionService.load(sampleDataPath);
+const recruiterService = new RecruiterService(); recruiterService.load(sampleDataPath);
+
+const templatingService = new TemplatingService(); templatingService.load(templatePath);
+
+const services = new ServiceContainer(candidateService, interviewService, locationService, positionService, recruiterService, templatingService);
+
+const bot = new TeamsTalentMgmtBot(
+    userState, 
+    conversationState, 
+    services);
 
 const server = restify.createServer();
 server.use(restify.plugins.bodyParser());
