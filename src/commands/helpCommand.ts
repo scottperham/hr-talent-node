@@ -1,5 +1,5 @@
 import { CardFactory, MessageFactory, TurnContext } from "botbuilder";
-import { CandidateService, ServiceContainer, TemplatingService } from "../services/data/candidateService";
+import { ServiceContainer } from "../services/data/ServiceContainer";
 import { CommandBase } from "./commandBase";
 
 export class HelpCommand extends CommandBase {
@@ -32,8 +32,6 @@ export class CandidateDetailsCommand extends CommandBase {
             await turnContext.sendActivity("Cannot find that candidate");
             return;
         }
-
-        this.services.populateCandidate(candidate);
 
         const activity = MessageFactory.attachment({
             contentType: CardFactory.contentTypes.adaptiveCard,

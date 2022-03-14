@@ -13,9 +13,9 @@ export type Candidate = IdentifiableEntity & {
     dateApplied: Date
     comments: Comment[]
     locationId: number
-    location: Location
+    location: Location | undefined
     positionId: number
-    position: Position
+    position: Position | undefined
     interviews: Interview[]
 }
 
@@ -30,8 +30,8 @@ export type Comment = IdentifiableEntity & {
     candidateId: number
     text: string
     authorName: string
-    authorRole: string
-    authorProfilePicture: string
+    authorRole?: string
+    authorProfilePicture?: string
 }
 
 export type Location = IdentifiableEntity & {
@@ -61,9 +61,9 @@ export type Position = IdentifiableEntity & {
     level: number
     description: string
     hiringManagerId: number
-    hiringManager: Recruiter
+    hiringManager?: Recruiter
     locationId: number
-    location: Location
+    location?: Location
     candidates: Candidate[]
 }
 

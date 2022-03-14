@@ -3,8 +3,14 @@ import { ConversationState, TeamsActivityHandler, TurnContext, UserState, Activi
 import { randomUUID } from "crypto";
 import { CommandBase } from "../commands/commandBase";
 import { CandidateDetailsCommand, HelpCommand } from "../commands/helpCommand";
-import { CandidateService, InterviewService, LocationService, PositionService, RecruiterService, ServiceContainer, TemplatingService } from "../services/data/candidateService";
-import { Candidate } from "../services/data/dtos";
+import { CandidateService } from "../services/data/CandidateService";
+import { ServiceContainer } from "../services/data/ServiceContainer";
+import { InterviewService } from "../services/data/InterviewService";
+import { LocationService } from "../services/data/LocationService";
+import { TemplatingService } from "../services/data/TemplatingService";
+import { RecruiterService } from "../services/data/RecruiterService";
+import { PositionService } from "../services/data/PositionService";
+import { Candidate, Recruiter } from "../services/data/dtos";
 import { InvokeActivityHandler } from "../services/invokeActivityHandler";
 import { TokenProvider } from "../services/tokenProvider";
 export class TeamsTalentMgmtBot extends TeamsActivityHandler {
@@ -99,24 +105,22 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
         
         let candidate: Candidate;
 
-        switch(invokeValue.action.data.commandId) {
+        switch(invokeValue.action.verb) {
             case "LeaveComment":
-                candidate = <Candidate>this.services.candidateService.getById(parseInt(<string>invokeValue.action.data.candidateId));
-                (candidate.comments || (candidate.comments = [])).push({
-                    authorName: "sadf",
-                    authorProfilePicture: "",
-                    authorRole: "",
+                candidate = <Candidate>this.services.candidateService.getById(parseInt(<string>invokeValue.action.data.candidateId), true);
+                this.services.candidateService.saveComment({
+                    authorName: context.activity.from.name,
                     candidateId: candidate.id,
                     text: <string>invokeValue.action.data.comment,
                     id: 0
-                })
+                });
                 return Promise.resolve({
                     type: CardFactory.contentTypes.adaptiveCard,
                     statusCode: 200,
                     value: this.services.templatingService.getCandidateTemplate(candidate, this.services.recruiterService.getAll(), "Comment added")
                 });
             case "ScheduleInterview":
-                candidate = <Candidate>this.services.candidateService.getById(parseInt(<string>invokeValue.action.data.candidateId));
+                candidate = <Candidate>this.services.candidateService.getById(parseInt(<string>invokeValue.action.data.candidateId), true);
                 this.services.interviewService.scheduleInterview(
                     parseInt(<string>invokeValue.action.data.candidateId), 
                     parseInt(<string>invokeValue.action.data.interviewId), 

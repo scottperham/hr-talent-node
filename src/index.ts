@@ -3,7 +3,14 @@ import * as dotenv from 'dotenv';
 import * as restify from 'restify';
 import { CloudAdapter, ConfigurationServiceClientCredentialFactory, ConfigurationBotFrameworkAuthentication, MemoryStorage, ConversationState, UserState } from 'botbuilder';
 import { TeamsTalentMgmtBot } from './bots/bot';
-import { CandidateService, InterviewService, LocationService, PositionService, RecruiterService, ServiceContainer, TemplatingService } from './services/data/candidateService';
+import { CandidateService } from './services/data/CandidateService';
+import { ServiceContainer } from "./services/data/ServiceContainer";
+import { InterviewService } from "./services/data/InterviewService";
+import { LocationService } from "./services/data/LocationService";
+import { TemplatingService } from "./services/data/TemplatingService";
+import { RecruiterService } from "./services/data/RecruiterService";
+import { PositionService } from "./services/data/PositionService";
+import { ClientApiService } from './services/clientApiService';
 
 const env_file = path.join(__dirname, "..", ".env");
 dotenv.config({path: env_file});
@@ -39,30 +46,69 @@ const conversationState = new ConversationState(memoryStorage);
 const userState = new UserState(memoryStorage);
 
 const sampleDataPath = path.join(__dirname, "..", "src\\sampleData");
-const templatePath = path.join(__dirname, "..", "src\\templates");
+const templatesPath = path.join(__dirname, "..", "src\\templates");
 
-const candidateService = new CandidateService(); candidateService.load(sampleDataPath);
-const interviewService = new InterviewService(); interviewService.load(sampleDataPath);
-const locationService = new LocationService(); locationService.load(sampleDataPath);
-const positionService = new PositionService(); positionService.load(sampleDataPath);
-const recruiterService = new RecruiterService(); recruiterService.load(sampleDataPath);
-
-const templatingService = new TemplatingService(); templatingService.load(templatePath);
-
-const services = new ServiceContainer(candidateService, interviewService, locationService, positionService, recruiterService, templatingService);
+const services = new ServiceContainer();
+services.loadData(sampleDataPath);
+services.loadTemplates(templatesPath);
 
 const bot = new TeamsTalentMgmtBot(
     userState, 
     conversationState, 
     services);
 
+const clientApiService = new ClientApiService(services);
+
 const server = restify.createServer();
+server.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    return next();
+});
 server.use(restify.plugins.bodyParser());
+server.use(restify.plugins.queryParser());
 
 server.listen(process.env.port || process.env.PORT || 3978, () => {
     console.log(`\n${ server.name } listening to ${ server.url }`);
 });
 
-server.post('/api/messages', async (req, res) => {
+server.post('/api/messages', async (req, res, next) => {
     await adapter.process(req, res, context => bot.run(context));
+    return next();
+});
+
+server.get('/api/app', (req, res, next) => {
+    res.send(200, {
+        appId: process.env.TeamsAppId,
+        botId: process.env.MicrosoftAppId
+    });
+    return next();
+});
+
+server.get('/api/candidates/:id', (req, res, next) => {
+    const candiate = clientApiService.getCandidate(parseInt(req.params.id as string));
+    if (!candiate) {
+        res.send(404);
+    }
+    else {
+        res.send(200, candiate);
+    }
+
+    return next();
+});
+
+server.get('/api/positions/open', (req, res, next) => {
+    res.send(200, services.positionService.getOpenPositions());
+    return next();
+});
+
+server.get('/api/recruiters/:alias/positions', (req, res, next) => {
+    res.send(200, services.positionService.getOpenPositions(/*req.params.alias*/));
+    return next();
+});
+
+server.get("/StaticViews/*", (req, res, next) => {
+    return restify.plugins.serveStatic({
+    directory: path.join(__dirname, "..", "src")
+})(req, res, next)
 });
