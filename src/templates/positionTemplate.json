@@ -1,0 +1,44 @@
+{
+    "type": "AdaptiveCard",
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "version": "1.5",
+    "body": [
+        {
+            "type": "TextBlock",
+            "text": "${title}",
+            "wrap": true,
+            "weight": "Bolder",
+            "size": "Medium"
+        },
+        {
+            "type": "FactSet",
+            "facts": [
+                {
+                    "title": "Position ID:",
+                    "value": "${externalId}"
+                },
+                {
+                    "title": "Location:",
+                    "value": "${location.locationAddress}"
+                },
+                {
+                    "title": "Days open:",
+                    "value": "${daysOpen}"
+                },
+                {
+                    "title": "Applicants:",
+                    "value": "${applicants}"
+                },
+                {
+                    "title": "Hiring Manager:",
+                    "value": "${hiringManager.name}"
+                }
+            ]
+        },
+        {
+            "type": "TextBlock",
+            "text": "Description: ${description}",
+            "wrap": true
+        }
+    ]
+}

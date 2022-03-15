@@ -14,13 +14,9 @@ export class InterviewService extends DataService<Interview> {
         return obj;
     }
 
-    public scheduleInterview(candidateId: number, recruiterId: number, interviewDate: Date, interviewType: string, isRemote: boolean) {
-        this.add({
-            candidateId,
-            id: this.getNextId(),
-            interviewDate,
-            recruiterId
-        });
+    public scheduleInterview(interview: Interview) {
+        interview.id = this.getNextId();
+        this.add(interview);
     }
 
     public getByCandidateId(id: number, expand: boolean = false): Interview[] {

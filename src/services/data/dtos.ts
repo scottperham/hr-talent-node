@@ -1,3 +1,5 @@
+import { parseBool } from "adaptivecards"
+
 export type IdentifiableEntity = {
     id: number
 }
@@ -26,12 +28,20 @@ export enum InterviewStageType {
     Offered
 }
 
-export type Comment = IdentifiableEntity & {
+export type Comment = {
     candidateId: number
     text: string
     authorName: string
     authorRole?: string
     authorProfilePicture?: string
+}
+
+export const convertInvokeActionDataToComment = (data: any, authorName: string) : Comment => {
+    return {
+        authorName,
+        candidateId: data.candidateId,
+        text: data.comment
+    }
 }
 
 export type Location = IdentifiableEntity & {
@@ -64,7 +74,8 @@ export type Position = IdentifiableEntity & {
     hiringManager?: Recruiter
     locationId: number
     location?: Location
-    candidates: Candidate[]
+    candidates: Candidate[],
+    externalId: string
 }
 
 export type Interview = IdentifiableEntity & {
@@ -73,4 +84,15 @@ export type Interview = IdentifiableEntity & {
     candidateId: number
     recruiterId: number
     recruiter?: Recruiter
+    isRemote: boolean
+}
+
+export const convertInvokeActionDataToInterview = (data: any) : Interview => {
+    return {
+        candidateId: data.candidateId,
+        id: 0,
+        interviewDate: new Date(data.interviewDate),
+        recruiterId: parseInt(data.interviewerId),
+        isRemote: parseBool(data.isRemote) || false
+    }
 }

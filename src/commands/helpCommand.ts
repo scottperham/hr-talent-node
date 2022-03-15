@@ -43,3 +43,33 @@ export class CandidateDetailsCommand extends CommandBase {
         await turnContext.sendActivity(activity);
     }
 }
+
+export class PositionDetailsCommand extends CommandBase {
+
+    services: ServiceContainer
+
+    constructor(services: ServiceContainer) {
+        super("qwer")
+
+        this.services = services;
+    }
+
+    public async Execute(turnContext: TurnContext): Promise<void> {
+        const text = this.getTextWithoutCommand(turnContext.activity.text);
+        const position = this.services.positionService.searchOne(text);
+
+        if (!position) {
+            await turnContext.sendActivity("Cannot find that candidate");
+            return;
+        }
+
+        const activity = MessageFactory.attachment({
+            contentType: CardFactory.contentTypes.adaptiveCard,
+            content: this.services.templatingService.getPositionTemplate(position)
+        });
+
+        console.log(JSON.stringify(activity, null, 2));
+
+        await turnContext.sendActivity(activity);
+    }
+}

@@ -26,20 +26,21 @@ export class CandidateService extends DataService<Candidate> {
     }
 
     public search(searchText: string, maxResults: number) : Candidate[] {
-        searchText = searchText.trim();
-
+        
         if (!searchText) {
-            return this.filter(x => true, maxResults);
+            return this.filter(x => true, maxResults, true);
         }
+
+        searchText = searchText.trim();
 
         const id = parseInt(searchText);
 
         if (id) {
-            const candidate = this.getById(id);
+            const candidate = this.getById(id, true);
             return candidate ? [candidate] : [];
         }
 
-        return this.filter(x => x.name.indexOf(searchText) > -1, maxResults);
+        return this.filter(x => x.name.indexOf(searchText) > -1, maxResults, true);
     }
 
     public getByPosition(positionId: number, expand: boolean = false): Candidate[] {

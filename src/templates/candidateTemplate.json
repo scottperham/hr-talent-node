@@ -80,6 +80,7 @@
         {
             "type": "Action.ShowCard",
             "title": "Schedule an interview",
+            "$when": "${renderActions}",
             "card": {
                 "type": "AdaptiveCard",
                 "body": [
@@ -172,8 +173,8 @@
                                 "type": "Action.Execute",
                                 "title": "Schedule",
                                 "style": "positive",
+                                "verb": "ScheduleInterview",
                                 "data": {
-                                    "commandId": "ScheduleInterview",
                                     "candidateId": "${id}"
                                 }
                             }
@@ -191,6 +192,7 @@
         {
             "type": "Action.ShowCard",
             "title": "Leave comment",
+            "$when": "${renderActions}",
             "card": {
                 "type": "AdaptiveCard",
                 "body": [

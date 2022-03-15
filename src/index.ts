@@ -3,13 +3,7 @@ import * as dotenv from 'dotenv';
 import * as restify from 'restify';
 import { CloudAdapter, ConfigurationServiceClientCredentialFactory, ConfigurationBotFrameworkAuthentication, MemoryStorage, ConversationState, UserState } from 'botbuilder';
 import { TeamsTalentMgmtBot } from './bots/bot';
-import { CandidateService } from './services/data/CandidateService';
 import { ServiceContainer } from "./services/data/ServiceContainer";
-import { InterviewService } from "./services/data/InterviewService";
-import { LocationService } from "./services/data/LocationService";
-import { TemplatingService } from "./services/data/TemplatingService";
-import { RecruiterService } from "./services/data/RecruiterService";
-import { PositionService } from "./services/data/PositionService";
 import { ClientApiService } from './services/clientApiService';
 
 const env_file = path.join(__dirname, "..", ".env");
@@ -109,6 +103,6 @@ server.get('/api/recruiters/:alias/positions', (req, res, next) => {
 
 server.get("/StaticViews/*", (req, res, next) => {
     return restify.plugins.serveStatic({
-    directory: path.join(__dirname, "..", "src")
-})(req, res, next)
+        directory: path.join(__dirname, "..", "src")
+    })(req, res, next)
 });
