@@ -1,8 +1,11 @@
-import { ConversationState, TeamsActivityHandler, TurnContext, UserState, Activity, SigninStateVerificationQuery, MessageFactory, CardFactory, AdaptiveCardInvokeResponse, AdaptiveCardInvokeValue, MessagingExtensionQuery, MessagingExtensionResponse } from "botbuilder";
+import { ConversationState, TeamsActivityHandler, TurnContext, UserState, Activity, SigninStateVerificationQuery, MessageFactory, CardFactory, AdaptiveCardInvokeResponse, AdaptiveCardInvokeValue, MessagingExtensionQuery, MessagingExtensionResponse, MessagingExtensionAction, MessagingExtensionActionResponse } from "botbuilder";
 import { randomUUID } from "crypto";
 import { CommandBase } from "../commands/commandBase";
-import { CandidateDetailsCommand, HelpCommand, PositionDetailsCommand } from "../commands/helpCommand";
-import { ServiceContainer } from "../services/data/ServiceContainer";
+import { HelpCommand } from "../commands/helpCommand";
+import { PositionDetailsCommand } from "../commands/positionDetailsCommand";
+import { CandidateDetailsCommand } from "../commands/candidateDetailsCommand";
+import { TopCandidatesCommand } from "../commands/topCandidatesCommand";
+import { ServiceContainer } from "../services/data/serviceContainer";
 import { InvokeActivityHandler } from "../services/invokeActivityHandler";
 import { TokenProvider } from "../services/tokenProvider";
 export class TeamsTalentMgmtBot extends TeamsActivityHandler {
@@ -29,9 +32,10 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
         this.invokeHandler = new InvokeActivityHandler(this.tokenProvider, services);
 
         this.commands = [
-            {command: new HelpCommand(), requireAuth: true },
-            {command: new CandidateDetailsCommand(services), requireAuth: false},
-            {command: new PositionDetailsCommand(services), requireAuth: false}
+            {command: new HelpCommand(services), requireAuth: false },
+            {command: new CandidateDetailsCommand(services), requireAuth: true},
+            {command: new PositionDetailsCommand(services), requireAuth: true},
+            {command: new TopCandidatesCommand(services), requireAuth: true}
         ]
 
         this.onMessage(async (context, next): Promise<void> => {
@@ -71,7 +75,7 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
                 }
             }
             
-            await command.command.Execute(context);
+            await command.command.execute(context);
         }
         else {
             await context.sendActivity("Sorry, not sure...");
@@ -90,6 +94,14 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
         });
 
         await context.sendActivity(activity);
+    }
+
+    protected async handleTeamsMessagingExtensionSubmitAction(context: TurnContext, action: MessagingExtensionAction): Promise<MessagingExtensionActionResponse> {
+        return await this.invokeHandler.handleMessagingExtensionSubmitAction(action);
+    }
+
+    protected async handleTeamsMessagingExtensionFetchTask(context: TurnContext, action: MessagingExtensionAction): Promise<MessagingExtensionActionResponse> {
+        return await this.invokeHandler.handleMessageExtensionFetchTask(action);
     }
 
     protected async handleTeamsMessagingExtensionQuery(context: TurnContext, query: MessagingExtensionQuery): Promise<MessagingExtensionResponse> {

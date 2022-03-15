@@ -1,9 +1,9 @@
-import { PositionService } from "./PositionService";
-import { RecruiterService } from "./RecruiterService";
-import { TemplatingService } from "./TemplatingService";
-import { LocationService } from "./LocationService";
-import { InterviewService } from "./InterviewService";
-import { CandidateService } from "./CandidateService";
+import { PositionService } from "./positionService";
+import { RecruiterService } from "./recruiterService";
+import { TemplatingService } from "./templatingService";
+import { LocationService } from "./locationService";
+import { InterviewService } from "./interviewService";
+import { CandidateService } from "./candidateService";
 
 
 export class ServiceContainer {

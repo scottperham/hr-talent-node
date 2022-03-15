@@ -1,6 +1,6 @@
 import { Position } from "./dtos";
-import { DataService } from "./DataService";
-import { ServiceContainer } from "./ServiceContainer";
+import { DataService } from "./dataService";
+import { ServiceContainer } from "./serviceContainer";
 import { randomUUID } from "crypto";
 
 
@@ -10,10 +10,10 @@ export class PositionService extends DataService<Position> {
         super("positions", services);
     }
 
-    protected expand(obj: Position): Position {
-        obj.candidates = this.services.candidateService.getByPosition(obj.id);
-        obj.location = this.services.locationService.getById(obj.locationId);
-        obj.hiringManager = this.services.recruiterService.getById(obj.hiringManagerId);
+    protected async expand(obj: Position): Promise<Position> {
+        obj.hiringManager = await this.services.recruiterService.getById(obj.hiringManagerId);
+        obj.candidates = await this.services.candidateService.getByPosition(obj.id);
+        obj.location = await this.services.locationService.getById(obj.locationId);
         return obj;
     }
 
@@ -21,34 +21,34 @@ export class PositionService extends DataService<Position> {
         obj.externalId = randomUUID().substring(0, 8).toUpperCase();
     }
 
-    public getOpenPositions(): Position[] {
-        return this.getAll(true);
+    public async getOpenPositions(): Promise<Position[]> {
+        return await this.getAll(true);
     }
 
-    public getByRecruiterId(id: number): Position[] {
-        return this.filter(x => x.hiringManagerId == id);
+    public async getByRecruiterId(id: number): Promise<Position[]> {
+        return await this.filter(x => x.hiringManagerId == id, undefined, true);
     }
 
-    public searchOne(searchText: string) : Position | undefined {
-        const positions = this.search(searchText, 1);
+    public async searchOne(searchText: string) : Promise<Position | undefined> {
+        const positions = await this.search(searchText, 1);
         return positions.length == 0 ? undefined : positions[0];
     }
 
-    public search(searchText: string | undefined, maxResults: number) : Position[] {
+    public async search(searchText: string | undefined, maxResults: number) : Promise<Position[]> {
 
         if (!searchText) {
-            return this.filter(x => true, maxResults, true);
+            const results = await this.filter(x => true, maxResults, true);
+            return results;
         }
         
         searchText = searchText.trim();
 
-        const id = parseInt(searchText);
+        return await this.filter(x => x.externalId == searchText || x.id == parseInt(<string>searchText), maxResults, true);
+    }
 
-        if (id) {
-            const position = this.getById(id, true);
-            return position ? [position] : [];
-        }
-
-        return this.filter(x => x.title.indexOf(<string>searchText) > -1, maxResults, true);
+    public async createPosition(position: Position) : Promise<void> {
+        position.id = this.getNextId();
+        this.decorate(position);
+        await this.add(position);
     }
 }

@@ -1,6 +1,6 @@
 import { Interview } from "./dtos";
-import { DataService } from "./DataService";
-import { ServiceContainer } from "./ServiceContainer";
+import { DataService } from "./dataService";
+import { ServiceContainer } from "./serviceContainer";
 
 
 export class InterviewService extends DataService<Interview> {
@@ -9,17 +9,17 @@ export class InterviewService extends DataService<Interview> {
         super("interviews", services);
     }
 
-    protected expand(obj: Interview): Interview {
-        obj.recruiter = this.services.recruiterService.getById(obj.recruiterId);
+    protected async expand(obj: Interview): Promise<Interview> {
+        obj.recruiter = await this.services.recruiterService.getById(obj.recruiterId);
         return obj;
     }
 
-    public scheduleInterview(interview: Interview) {
+    public async scheduleInterview(interview: Interview) : Promise<void> {
         interview.id = this.getNextId();
-        this.add(interview);
+        await this.add(interview);
     }
 
-    public getByCandidateId(id: number, expand: boolean = false): Interview[] {
-        return this.filter(x => x.candidateId == id, undefined, expand);
+    public async getByCandidateId(id: number, expand: boolean = false): Promise<Interview[]> {
+        return await this.filter(x => x.candidateId == id, undefined, expand);
     }
 }

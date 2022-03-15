@@ -1,75 +1,23 @@
-import { CardFactory, MessageFactory, TurnContext } from "botbuilder";
-import { ServiceContainer } from "../services/data/ServiceContainer";
+import { TurnContext } from "botbuilder";
+import { ServiceContainer } from "../services/data/serviceContainer";
 import { CommandBase } from "./commandBase";
 
 export class HelpCommand extends CommandBase {
 
-    constructor() {
-        super("help")
+    constructor(services: ServiceContainer) {
+        super("help", services)
     }
 
-    public async Execute(turnContext: TurnContext): Promise<void> {
-        const helpMessage = "Hello this is some help text";
+    public async execute(turnContext: TurnContext): Promise<void> {
+
+        const candidate = await this.services.candidateService.searchOne("");
+
+        const helpMessage = "Here's what I can help you with:\n\n"
+            + `* Show details about a candidate, for example: candidate details ${candidate?.name} \n`
+            + `* Show summary about a candidate, for example: summary ${candidate?.name} \n`
+            + `* Show top recent candidates for a Position ID, for example: top candidates ${candidate?.position?.externalId} \n`
+            + `* Create a new job posting \n`
+            + `* List all your open positions`;
         await turnContext.sendActivity(helpMessage);
-    }
-}
-
-export class CandidateDetailsCommand extends CommandBase {
-
-    services: ServiceContainer
-
-    constructor(services: ServiceContainer) {
-        super("asdf")
-
-        this.services = services;
-    }
-
-    public async Execute(turnContext: TurnContext): Promise<void> {
-        const text = this.getTextWithoutCommand(turnContext.activity.text);
-        const candidate = this.services.candidateService.searchOne("Bart Fredrick");
-
-        if (!candidate) {
-            await turnContext.sendActivity("Cannot find that candidate");
-            return;
-        }
-
-        const activity = MessageFactory.attachment({
-            contentType: CardFactory.contentTypes.adaptiveCard,
-            content: this.services.templatingService.getCandidateTemplate(candidate, this.services.recruiterService.getAll())
-        });
-
-        console.log(JSON.stringify(activity, null, 2));
-
-        await turnContext.sendActivity(activity);
-    }
-}
-
-export class PositionDetailsCommand extends CommandBase {
-
-    services: ServiceContainer
-
-    constructor(services: ServiceContainer) {
-        super("qwer")
-
-        this.services = services;
-    }
-
-    public async Execute(turnContext: TurnContext): Promise<void> {
-        const text = this.getTextWithoutCommand(turnContext.activity.text);
-        const position = this.services.positionService.searchOne(text);
-
-        if (!position) {
-            await turnContext.sendActivity("Cannot find that candidate");
-            return;
-        }
-
-        const activity = MessageFactory.attachment({
-            contentType: CardFactory.contentTypes.adaptiveCard,
-            content: this.services.templatingService.getPositionTemplate(position)
-        });
-
-        console.log(JSON.stringify(activity, null, 2));
-
-        await turnContext.sendActivity(activity);
     }
 }

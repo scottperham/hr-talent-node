@@ -1,4 +1,5 @@
 import { parseBool } from "adaptivecards"
+import { CardAction } from "botbuilder"
 
 export type IdentifiableEntity = {
     id: number
@@ -59,11 +60,7 @@ export type Recruiter = IdentifiableEntity & {
     positions: Position[]
 }
 
-export enum RecruiterRole {
-    HiringManager,
-    HRStaff,
-    Interviewer
-}
+export type RecruiterRole = "Hiring manager" | "HR staff" | "Interviewer"
 
 export type Position = IdentifiableEntity & {
     title: string
@@ -75,7 +72,20 @@ export type Position = IdentifiableEntity & {
     locationId: number
     location?: Location
     candidates: Candidate[],
-    externalId: string
+    externalId?: string
+}
+
+export const convertInvokeActionDataToPosition = (data: any) : Position => {
+    return {
+        title: data.jobTitle,
+        daysOpen: 0,
+        candidates: [],
+        description: data.jobDescription,
+        hiringManagerId: parseInt(data.jobHiringManager),
+        id: 0,
+        level: parseInt(data.jobLevel),
+        locationId: parseInt(data.jobLocation)
+    }
 }
 
 export type Interview = IdentifiableEntity & {
@@ -95,4 +105,21 @@ export const convertInvokeActionDataToInterview = (data: any) : Interview => {
         recruiterId: parseInt(data.interviewerId),
         isRemote: parseBool(data.isRemote) || false
     }
+}
+
+/* Extra adaptive card types! */
+
+export interface ListCard {
+    title: string
+    items: CardListItem[]
+    buttons: CardAction[]
+}
+
+export interface CardListItem {
+    id?: string
+    icon: string
+    type: string
+    title: string
+    subtitle: string
+    tap: CardAction
 }

@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import * as restify from 'restify';
 import { CloudAdapter, ConfigurationServiceClientCredentialFactory, ConfigurationBotFrameworkAuthentication, MemoryStorage, ConversationState, UserState } from 'botbuilder';
 import { TeamsTalentMgmtBot } from './bots/bot';
-import { ServiceContainer } from "./services/data/ServiceContainer";
+import { ServiceContainer } from "./services/data/serviceContainer";
 import { ClientApiService } from './services/clientApiService';
 
 const env_file = path.join(__dirname, "..", ".env");

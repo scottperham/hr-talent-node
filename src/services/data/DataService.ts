@@ -1,7 +1,7 @@
 import { IdentifiableEntity } from "./dtos";
 import * as fs from 'fs';
 import * as path from 'path';
-import { ServiceContainer } from "./ServiceContainer";
+import { ServiceContainer } from "./serviceContainer";
 
 
 export class DataService<T extends IdentifiableEntity> {
@@ -12,6 +12,10 @@ export class DataService<T extends IdentifiableEntity> {
     constructor(sampleDataFile: string, services: ServiceContainer) {
         this.sampleDataFile = sampleDataFile;
         this.services = services;
+    }
+
+    protected promisify<T>(obj: T) : Promise<T> {
+        return Promise.resolve(obj);
     }
 
     public load(sampleDataPath: string) {
@@ -39,13 +43,15 @@ export class DataService<T extends IdentifiableEntity> {
         return clones;
     }
 
-    public getById(id: number, expand: boolean = false): T | undefined {
-        const obj = this.cloneOne(this.getReference(id));
-        return obj && expand ? this.expand(obj) : obj;
+    public async getById(id: number, expand: boolean = false): Promise<T | undefined> {
+        const obj = this.cloneOne(await this.getReference(id));
+        const result = obj && expand ? (await this.expand(obj)) : obj;
+        return result;
     }
 
-    protected getReference(id: number): T | undefined {
-        return this.data.find(x => x.id == id);
+    protected getReference(id: number): Promise<T | undefined> {
+        const result = this.data.find(x => x.id == id);
+        return this.promisify(result);
     }
 
     protected getNextId(): number {
@@ -54,23 +60,26 @@ export class DataService<T extends IdentifiableEntity> {
         return maxId + 1;
     }
 
-    public getAll(expand: boolean = false): T[] {
+    public async getAll(expand: boolean = false): Promise<T[]> {
         const data = this.cloneAll(this.data);
-        return expand ? this.expandAll(data) : data;
+        const result = expand ? (await this.expandAll(data)) : data;
+        return result;
     }
 
     protected decorate(obj: T) { }
-    protected expand(obj: T): T { return obj; }
+    protected expand(obj: T): Promise<T> { return this.promisify(obj); }
 
-    private expandAll(objs: T[]): T[] {
-        objs.forEach(x => this.expand(x));
+    private async expandAll(objs: T[]): Promise<T[]> {
+        for (let i = 0; i < objs.length; i++) {
+            await this.expand(objs[i]);
+        }
         return objs;
     }
 
-    protected filter(predicate: (obj: T) => boolean, take?: number, expand: boolean = false): T[] {
+    protected async filter(predicate: (obj: T) => boolean, take?: number, expand: boolean = false): Promise<T[]> {
         let results = this.cloneAll(this.data.filter(predicate));
         if (expand) {
-            results = this.expandAll(results);
+            results = await this.expandAll(results);
         }
         if (take) {
             results = results.slice(0, take);
@@ -78,15 +87,16 @@ export class DataService<T extends IdentifiableEntity> {
         return results;
     }
 
-    protected filterOne(predicate: (obj: T) => boolean, take?: number, expand: boolean = false): T | undefined {
+    protected async filterOne(predicate: (obj: T) => boolean, take?: number, expand: boolean = false): Promise<T | undefined> {
         const result = this.cloneOne(this.data.find(predicate));
         if (result && expand) {
-            this.expand(result);
+            await this.expand(result);
         }
         return result;
     }
 
-    protected add(obj: T) {
+    protected add(obj: T) : Promise<undefined> {
         this.data.push(obj);
+        return this.promisify(undefined);
     }
 }

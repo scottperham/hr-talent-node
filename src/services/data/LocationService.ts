@@ -1,6 +1,6 @@
 import { Location } from "./dtos";
-import { DataService } from "./DataService";
-import { ServiceContainer } from "./ServiceContainer";
+import { DataService } from "./dataService";
+import { ServiceContainer } from "./serviceContainer";
 
 
 export class LocationService extends DataService<Location> {

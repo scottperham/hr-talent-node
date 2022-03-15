@@ -1,4 +1,4 @@
-import { ServiceContainer } from "./data/ServiceContainer";
+import { ServiceContainer } from "./data/serviceContainer";
 import { Candidate } from "./data/dtos";
 
 export class ClientApiService {
@@ -9,7 +9,7 @@ export class ClientApiService {
         this.services = services;
     }
 
-    public getCandidate(id: number): Candidate | undefined {
-        return this.services.candidateService.getById(id);
+    public async getCandidate(id: number): Promise<Candidate | undefined> {
+        return await this.services.candidateService.getById(id);
     }
 }

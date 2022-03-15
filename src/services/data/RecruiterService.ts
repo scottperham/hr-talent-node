@@ -1,6 +1,6 @@
-import { Recruiter } from "./dtos";
-import { DataService } from "./DataService";
-import { ServiceContainer } from "./ServiceContainer";
+import { Recruiter, RecruiterRole } from "./dtos";
+import { DataService } from "./dataService";
+import { ServiceContainer } from "./serviceContainer";
 
 
 export class RecruiterService extends DataService<Recruiter> {
@@ -9,12 +9,20 @@ export class RecruiterService extends DataService<Recruiter> {
         super("recruiters", services);
     }
 
-    protected expand(obj: Recruiter): Recruiter {
-        obj.positions = this.services.positionService.getByRecruiterId(obj.id);
+    protected async expand(obj: Recruiter): Promise<Recruiter> {
+        obj.positions = await this.services.positionService.getByRecruiterId(obj.id);
         return obj;
     }
 
-    public getByName(name: string): Recruiter | undefined {
-        return this.filterOne(x => x.name == name);
+    public async getByName(name: string): Promise<Recruiter | undefined> {
+        return await this.filterOne(x => x.name == name);
+    }
+
+    public async getAllHiringManagers(): Promise<Recruiter[]> {
+        return await this.filter(x => x.role == "Hiring manager", undefined, true);
+    }
+
+    public async getAllInterviewers(): Promise<Recruiter[]> {
+        return await this.filter(x => x.role == "Interviewer", undefined, true);
     }
 }

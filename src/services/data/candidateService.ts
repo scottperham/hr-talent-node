@@ -1,6 +1,6 @@
 import { Candidate, Comment } from "./dtos";
-import { ServiceContainer } from "./ServiceContainer";
-import { DataService } from "./DataService";
+import { ServiceContainer } from "./serviceContainer";
+import { DataService } from "./dataService";
 
 export class CandidateService extends DataService<Candidate> {
 
@@ -8,10 +8,10 @@ export class CandidateService extends DataService<Candidate> {
         super("candidates", services)
     }
 
-    protected expand(obj: Candidate): Candidate {
-        obj.location = this.services.locationService.getById(obj.locationId);
-        obj.position = this.services.positionService.getById(obj.positionId);
-        obj.interviews = this.services.interviewService.getByCandidateId(obj.id);
+    protected async expand(obj: Candidate): Promise<Candidate> {
+        obj.location = await this.services.locationService.getById(obj.locationId);
+        obj.position = await this.services.positionService.getById(obj.positionId);
+        obj.interviews = await this.services.interviewService.getByCandidateId(obj.id);
 
         return obj;
     }
@@ -20,15 +20,15 @@ export class CandidateService extends DataService<Candidate> {
         obj.comments = [];
     }
 
-    public searchOne(searchText: string) : Candidate | undefined {
-        const candidates = this.search(searchText, 1);
+    public async searchOne(searchText: string) : Promise<Candidate | undefined> {
+        const candidates = await this.search(searchText, 1);
         return candidates.length == 0 ? undefined : candidates[0];
     }
 
-    public search(searchText: string, maxResults: number) : Candidate[] {
+    public async search(searchText: string, maxResults: number) : Promise<Candidate[]> {
         
         if (!searchText) {
-            return this.filter(x => true, maxResults, true);
+            return await this.filter(x => true, maxResults, true);
         }
 
         searchText = searchText.trim();
@@ -36,19 +36,19 @@ export class CandidateService extends DataService<Candidate> {
         const id = parseInt(searchText);
 
         if (id) {
-            const candidate = this.getById(id, true);
+            const candidate = await this.getById(id, true);
             return candidate ? [candidate] : [];
         }
 
-        return this.filter(x => x.name.indexOf(searchText) > -1, maxResults, true);
+        return await this.filter(x => x.name.indexOf(searchText) > -1, maxResults, true);
     }
 
-    public getByPosition(positionId: number, expand: boolean = false): Candidate[] {
-        return this.filter(x => x.positionId == positionId, undefined, expand);
+    public async getByPosition(positionId: number, expand: boolean = false): Promise<Candidate[]> {
+        return await this.filter(x => x.positionId == positionId, undefined, expand);
     }
 
-    public saveComment(comment: Comment) {
-        const candidate = this.getReference(comment.candidateId);
+    public async saveComment(comment: Comment) : Promise<void> {
+        const candidate = await this.getReference(comment.candidateId);
         if (!candidate) {
             return;
         }

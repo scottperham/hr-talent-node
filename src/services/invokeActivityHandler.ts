@@ -1,7 +1,7 @@
 import { parseBool } from "adaptivecards";
-import { AdaptiveCardInvokeResponse, CardFactory, InvokeResponse, MessagingExtensionAttachment, MessagingExtensionQuery, MessagingExtensionResponse, TurnContext } from "botbuilder";
-import { convertInvokeActionDataToComment, convertInvokeActionDataToInterview } from "./data/dtos";
-import { ServiceContainer } from "./data/ServiceContainer";
+import { AdaptiveCardInvokeResponse, Attachment, CardFactory, InvokeResponse, MessagingExtensionAction, MessagingExtensionActionResponse, MessagingExtensionAttachment, MessagingExtensionQuery, MessagingExtensionResponse, TurnContext } from "botbuilder";
+import { convertInvokeActionDataToComment, convertInvokeActionDataToInterview, convertInvokeActionDataToPosition } from "./data/dtos";
+import { ServiceContainer } from "./data/serviceContainer";
 import { TokenProvider } from "./tokenProvider";
 
 export class InvokeActivityHandler {
@@ -27,7 +27,57 @@ export class InvokeActivityHandler {
         };
     }
 
-    public handleMessagingExtensionQuery(query: MessagingExtensionQuery, source: string): Promise<MessagingExtensionResponse> {
+    public async handleMessagingExtensionSubmitAction(action: MessagingExtensionAction): Promise<MessagingExtensionActionResponse> {
+        switch(action.data.commandId) {
+            case "createPosition":
+                const position = convertInvokeActionDataToPosition(action.data) ;
+                await this.services.positionService.createPosition(position);
+                const shareAttachment: Attachment = {
+                    contentType: CardFactory.contentTypes.adaptiveCard,
+                    content: this.services.templatingService.getPositionTemplate(position, true)
+                }
+                return {
+                    task: {
+                        type: "continue",
+                        value: {
+                            card: shareAttachment,
+                            title: "New position created",
+                            width: "medium",
+                            height: "medium"
+                        }
+                    }
+                }
+        }
+
+        return {}
+    }
+
+    public async handleMessageExtensionFetchTask(action: MessagingExtensionAction): Promise<MessagingExtensionActionResponse> {
+
+        if (action.commandId == "newPosition") {
+            const locations = await this.services.locationService.getAll();
+            const recruiters = await this.services.recruiterService.getAllHiringManagers();
+            const levels: number[] = [1,2,3,4,5,6,7];
+
+            const card = this.services.templatingService.getNewPositionTemplate(recruiters, locations, levels);
+
+            return Promise.resolve({
+                task: {
+                    type: "continue",
+                    value: {
+                        card: CardFactory.adaptiveCard(card),
+                        title: "Create new position",
+                        width: "large",
+                        height: "large"
+                    }
+                }
+            });
+        }
+
+        return Promise.resolve({});
+    }
+
+    public async handleMessagingExtensionQuery(query: MessagingExtensionQuery, source: string): Promise<MessagingExtensionResponse> {
         const initialRun = parseBool(query.parameters?.find(x => x.name == "initialRun")?.value);
         const maxResults = initialRun ? 5 : (query.queryOptions?.count || 5);
         const searchText = query.parameters?.find(x => x.name == "searchText")?.value;
@@ -36,7 +86,7 @@ export class InvokeActivityHandler {
 
         switch(query.commandId) {
             case "searchPositions":
-                const positions = this.services.positionService.search(searchText, maxResults);
+                const positions = await this.services.positionService.search(searchText, maxResults);
                 positions.forEach(x => {
                     attachments.push({
                         contentType: CardFactory.contentTypes.adaptiveCard,
@@ -46,8 +96,8 @@ export class InvokeActivityHandler {
                 });
                 break;
             case "searchCandidates":
-                const candidates = this.services.candidateService.search(searchText, maxResults);
-                const recruiters = this.services.recruiterService.getAll(true);
+                const candidates = await this.services.candidateService.search(searchText, maxResults);
+                const recruiters = await this.services.recruiterService.getAll(true);
                 candidates.forEach(x => {
                     attachments.push({
                         contentType: CardFactory.contentTypes.adaptiveCard,
@@ -69,33 +119,35 @@ export class InvokeActivityHandler {
 
     public async handleLeaveComment(invokeData: any, authorName: string): Promise<AdaptiveCardInvokeResponse> {
         const comment = convertInvokeActionDataToComment(invokeData, authorName);
-        const candidate = this.services.candidateService.getById(comment.candidateId, true);
+        const candidate = await this.services.candidateService.getById(comment.candidateId, true);
+        const recruiters = await this.services.recruiterService.getAll();
 
         if (!candidate) {
-            return await this.getAdaptiveCardInvokeResponse(404);
+            return this.getAdaptiveCardInvokeResponse(404);
         }
 
         this.services.candidateService.saveComment(comment);
-        return await this.getAdaptiveCardInvokeResponse(200, this.services.templatingService.getCandidateTemplate(candidate, this.services.recruiterService.getAll(), "Comment added"));
+        return this.getAdaptiveCardInvokeResponse(200, this.services.templatingService.getCandidateTemplate(candidate, recruiters, "Comment added"));
     }
 
     public async handleScheduleInterview(invokeData: any): Promise<AdaptiveCardInvokeResponse> {
         const interview = convertInvokeActionDataToInterview(invokeData);
-        const candidate = this.services.candidateService.getById(interview.candidateId, true);
+        const candidate = await this.services.candidateService.getById(interview.candidateId, true);
+        const recruiters = await this.services.recruiterService.getAll();
 
         if (!candidate) {
-            return await this.getAdaptiveCardInvokeResponse(404);
+            return this.getAdaptiveCardInvokeResponse(404);
         }
 
         this.services.interviewService.scheduleInterview(interview);
-        return await this.getAdaptiveCardInvokeResponse(200, this.services.templatingService.getCandidateTemplate(candidate, this.services.recruiterService.getAll(), "Interview scheduled"));
+        return this.getAdaptiveCardInvokeResponse(200, this.services.templatingService.getCandidateTemplate(candidate, recruiters, "Interview scheduled"));
     }
 
-    private getAdaptiveCardInvokeResponse(status: number, card?: any): Promise<AdaptiveCardInvokeResponse> {
-        return Promise.resolve({
+    private getAdaptiveCardInvokeResponse(status: number, card?: any): AdaptiveCardInvokeResponse {
+        return {
             type: card ? CardFactory.contentTypes.adaptiveCard : "",
             statusCode: status,
             value: card ? card : {}
-        });
+        };
     }
 }
