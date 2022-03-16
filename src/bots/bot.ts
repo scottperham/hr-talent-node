@@ -14,21 +14,16 @@ import { SignInCommand } from "../commands/signInCommand";
 export class TeamsTalentMgmtBot extends TeamsActivityHandler {
 
     userState: UserState;
-    conversationState: ConversationState;
     invokeHandler: InvokeActivityHandler;
     commands: {command: CommandBase, requireAuth: boolean}[];
     services: ServiceContainer;
     tokenProvider: TokenProvider;
     welcomeMessageState: StatePropertyAccessor<boolean>;
 
-    constructor(
-        userState: UserState, 
-        conversationState: ConversationState,
-        services: ServiceContainer) {
+    constructor(userState: UserState, services: ServiceContainer) {
         super();
 
         this.userState = userState;
-        this.conversationState = conversationState;
         this.services = services;
 
         this.welcomeMessageState = userState.createProperty<boolean>("welcomeMessageShown");
@@ -86,12 +81,11 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
         await super.run(context);
 
         await this.userState.saveChanges(context);
-        await this.conversationState.saveChanges(context);
     }
 
     private async handleTextMessage(context: TurnContext, text: string) : Promise<void> {
-        const commandText = context.activity.text.trim().toLowerCase()
 
+        const commandText = text.trim().toLowerCase();
         const commandContainer = this.commands.find(x => commandText.startsWith(x.command.id))
 
         if (commandContainer) {
@@ -100,7 +94,7 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
 
             if (commandContainer.requireAuth) {
 
-                if (!this.tokenProvider.hasToken(context)) {
+                if (!await this.tokenProvider.hasToken(context)) {
                     command = new SignInCommand(this.services, this.tokenProvider);
                 }
             }
