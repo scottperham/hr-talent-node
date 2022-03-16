@@ -1,10 +1,10 @@
 import * as path from 'path';
 import * as dotenv from 'dotenv';
-import * as restify from 'restify';
 import { CloudAdapter, ConfigurationServiceClientCredentialFactory, ConfigurationBotFrameworkAuthentication, MemoryStorage, ConversationState, UserState, ShowTypingMiddleware } from 'botbuilder';
 import { TeamsTalentMgmtBot } from './bots/bot';
 import { ServiceContainer } from "./services/data/serviceContainer";
 import { ClientApiService } from './services/clientApiService';
+import express from 'express';
 
 const env_file = path.join(__dirname, "..", ".env");
 dotenv.config({path: env_file});
@@ -41,6 +41,7 @@ const userState = new UserState(memoryStorage);
 
 const sampleDataPath = path.join(__dirname, "..", "src\\sampleData");
 const templatesPath = path.join(__dirname, "..", "src\\templates");
+const staticViewsPath = path.join(__dirname, "..", "src\\StaticViews");
 
 const services = new ServiceContainer();
 services.loadData(sampleDataPath);
@@ -53,74 +54,64 @@ const bot = new TeamsTalentMgmtBot(
 
 const clientApiService = new ClientApiService(services);
 
-const server = restify.createServer();
-server.use((req, res, next) => {
+const app = express();
+
+app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "X-Requested-With");
     return next();
 });
-server.use(restify.plugins.bodyParser());
-server.use(restify.plugins.queryParser());
 
-server.listen(process.env.port || process.env.PORT || 3978, () => {
-    console.log(`\n${ server.name } listening to ${ server.url }`);
+app.use(express.json());
+app.use("/StaticViews", express.static(staticViewsPath));
+
+const port = process.env.port || process.env.PORT || 3978;
+
+app.listen(port, () => {
+    console.log(`\nListening to ${ port }`);
 });
 
-server.post('/api/messages', async (req, res, next) => {
+app.post('/api/messages', async (req, res) => {
     await adapter.process(req, res, context => bot.run(context));
-    return next();
 });
 
-server.get('/api/app', (req, res, next) => {
-    res.send(200, {
+app.get('/api/app', (req, res) => {
+    res.send({
         appId: process.env.TeamsAppId,
         botId: process.env.MicrosoftAppId
     });
-    return next();
 });
 
-server.get('/api/candidates/:id', async (req, res, next) => {
-    const candiate = await clientApiService.getCandidate(parseInt(req.params.id as string));
+app.get('/api/candidates/:id', async (req, res) => {
+    const candiate = await clientApiService.getCandidate(parseInt(req.params.id));
     if (!candiate) {
-        res.send(404);
+        res.status(404);
     }
     else {
-        res.send(200, candiate);
+        res.send(candiate);
     }
-
-    return next();
 });
 
-server.get('/api/positions', async (req, res, next) => {
-    res.send(200, await services.positionService.getAll());
-    return next();
+app.get('/api/positions', async (req, res) => {
+    res.send(await services.positionService.getAll());
 });
 
-server.get('/api/positions/:id', async (req, res, next) => {
+app.get('/api/positions/:id', async (req, res) => {
     const position = await services.positionService.getById(parseInt(req.params.id), true);
     if (!position) {
-        res.send(404);
+        res.status(404);
         return;
     }
     for (let i = 0; i < position?.candidates.length; i++) {
         await services.candidateService.expand(position.candidates[i]);
     }
-    res.send(200, position);
-    return next();
+    res.send(position);
 });
 
-server.get('/api/positions/open', async (req, res, next) => {
-    res.send(200, await services.positionService.getOpenPositions());
-    return next();
+app.get('/api/positions/open', async (req, res) => {
+    res.send(await services.positionService.getOpenPositions());
 });
 
-server.get('/api/recruiters/:alias/positions', async (req, res, next) => {
-    res.send(200, await services.positionService.getOpenPositions(/*req.params.alias*/));
-    return next();
-});
-
-server.get("/StaticViews/*", (req, res, next) => {
-    return restify.plugins.serveStatic({
-        directory: path.join(__dirname, "..", "src")
-    })(req, res, next)
+app.get('/api/recruiters/:alias/positions', async (req, res) => {
+    res.send(await services.positionService.getOpenPositions(/*req.params.alias*/));
 });

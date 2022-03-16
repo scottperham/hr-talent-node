@@ -1,11 +1,12 @@
 {
   "dependencies": {
+    "@types/express": "^4.17.13",
     "adaptivecards": "^2.10.0",
     "adaptivecards-templating": "^2.2.0",
     "axios": "^0.26.1",
     "botbuilder": "^4.15.0",
     "dotenv": "^16.0.0",
-    "restify": "^8.6.1"
+    "express": "^4.17.3"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
