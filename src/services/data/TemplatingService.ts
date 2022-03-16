@@ -2,7 +2,7 @@ import { Candidate, Position, Recruiter, Location, CardListItem, ListCard } from
 import * as fs from 'fs';
 import * as path from 'path';
 import * as act from 'adaptivecards-templating';
-import { Attachment, CardFactory, CardImage } from "botbuilder";
+import { Attachment, CardFactory, CardImage, FileUploadInfo } from "botbuilder";
 
 
 export class TemplatingService {
@@ -19,7 +19,7 @@ export class TemplatingService {
         this.newPositionTempalte = fs.readFileSync(path.join(templatesPath, "newPositionTemplate.json")).toString();
     }
 
-    public getCandidateTemplate(candidate: Candidate, recruiters: Recruiter[], status?: string, renderActions: boolean = true): any {
+    public getCandidateTemplate(candidate: Candidate, recruiters: Recruiter[], status?: string, renderActions: boolean = true): Attachment {
         const template = new act.Template(JSON.parse(this.candidateTemplate));
         const payload = template.expand({
             $root: {
@@ -32,7 +32,7 @@ export class TemplatingService {
             }
         });
 
-        return payload;
+        return CardFactory.adaptiveCard(payload);
     }
 
     public getCandidatePreviewTemplate(candidate: Candidate): Attachment {
@@ -69,6 +69,35 @@ export class TemplatingService {
                 title,
                 items
             }
+        }
+    }
+
+    public getCandidateSummaryTemplate(candidate: Candidate) : Attachment {
+        return {
+            contentType: "application/vnd.microsoft.teams.card.file.consent",
+            content: {
+                description: `Here is the summary for ${candidate.name}`,
+                sizeInBytes: candidate.summary.length,
+                acceptContext: {
+                    candidateId: candidate.id
+                },
+                declineContext: {
+                    candidateId: candidate.id
+                }
+            },
+            name: `${candidate.name}.txt`
+        }
+    }
+
+    public getFileInfoCard(fileInfo: FileUploadInfo) : Attachment {
+        return {
+            contentType: "application/vnd.microsoft.teams.card.file.info",
+            content: {
+                fileType: fileInfo.fileType,
+                uniqueId: fileInfo.uniqueId
+            },
+            name: fileInfo.name,
+            contentUrl: fileInfo.contentUrl
         }
     }
 
@@ -109,7 +138,7 @@ export class TemplatingService {
         );
     }
 
-    public getPositionTemplate(position: Position, renderActions: boolean = false): any {
+    public getPositionTemplate(position: Position, renderActions: boolean = false): Attachment {
         const template = new act.Template(JSON.parse(this.positionTemplate));
         const payload = template.expand({
             $root: {
@@ -118,18 +147,34 @@ export class TemplatingService {
             }
         });
 
-        return payload;
+        return CardFactory.adaptiveCard(payload);
     }
 
-    public getNewPositionTemplate(recruiters: Recruiter[], locations: Location[], levels: number[]): any {
+    public getNewPositionTemplate(recruiters: Recruiter[], locations: Location[], source: string, signedIn: boolean): Attachment {
+        const levels = [1,2,3,4,5,6,7];
         const template = new act.Template(JSON.parse(this.newPositionTempalte));
         const payload = template.expand({
             $root: {
                 recruiters,
                 locations,
-                levels
+                levels,
+                source,
+                signedIn
             }
         });
-        return payload;
+        return CardFactory.adaptiveCard(payload);
+    }
+
+    public getWelcomeMessageCard(): Attachment {
+        return CardFactory.heroCard(
+            "Hi, I'm Talent bot!",
+            undefined,
+            [{
+                title: "help",
+                type: "imback",
+                value: "help"
+            }],{
+                text: "I can assist you with create new job postings, get details about your candidates, open positions and notify about your candidates stage updates. If you are admin, you can install the bot for the hiring managers"
+            })
     }
 }

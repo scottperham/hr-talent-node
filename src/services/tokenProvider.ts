@@ -14,4 +14,8 @@ export class TokenProvider {
     public setToken(token: string, turnContext: TurnContext) : Promise<void> {
         return this.tokenAccessor.set(turnContext, token);
     }
+
+    public async hasToken(turnContext: TurnContext) : Promise<boolean> {
+        return !!(await this.getToken(turnContext));
+    }
 }

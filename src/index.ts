@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import * as restify from 'restify';
-import { CloudAdapter, ConfigurationServiceClientCredentialFactory, ConfigurationBotFrameworkAuthentication, MemoryStorage, ConversationState, UserState } from 'botbuilder';
+import { CloudAdapter, ConfigurationServiceClientCredentialFactory, ConfigurationBotFrameworkAuthentication, MemoryStorage, ConversationState, UserState, ShowTypingMiddleware } from 'botbuilder';
 import { TeamsTalentMgmtBot } from './bots/bot';
 import { ServiceContainer } from "./services/data/serviceContainer";
 import { ClientApiService } from './services/clientApiService';
@@ -18,7 +18,7 @@ const credentialsFactory = new ConfigurationServiceClientCredentialFactory({
 const botFrameworkAuthentication = new ConfigurationBotFrameworkAuthentication(undefined, credentialsFactory);
 
 const adapter = new CloudAdapter(botFrameworkAuthentication);
-
+adapter.use(new ShowTypingMiddleware());
 adapter.onTurnError = async (context, error) => {
     console.error(`\n [onTurnError] unhandled error: ${ error }`);
 
@@ -79,8 +79,8 @@ server.get('/api/app', (req, res, next) => {
     return next();
 });
 
-server.get('/api/candidates/:id', (req, res, next) => {
-    const candiate = clientApiService.getCandidate(parseInt(req.params.id as string));
+server.get('/api/candidates/:id', async (req, res, next) => {
+    const candiate = await clientApiService.getCandidate(parseInt(req.params.id as string));
     if (!candiate) {
         res.send(404);
     }
@@ -91,13 +91,31 @@ server.get('/api/candidates/:id', (req, res, next) => {
     return next();
 });
 
-server.get('/api/positions/open', (req, res, next) => {
-    res.send(200, services.positionService.getOpenPositions());
+server.get('/api/positions', async (req, res, next) => {
+    res.send(200, await services.positionService.getAll());
     return next();
 });
 
-server.get('/api/recruiters/:alias/positions', (req, res, next) => {
-    res.send(200, services.positionService.getOpenPositions(/*req.params.alias*/));
+server.get('/api/positions/:id', async (req, res, next) => {
+    const position = await services.positionService.getById(parseInt(req.params.id), true);
+    if (!position) {
+        res.send(404);
+        return;
+    }
+    for (let i = 0; i < position?.candidates.length; i++) {
+        await services.candidateService.expand(position.candidates[i]);
+    }
+    res.send(200, position);
+    return next();
+});
+
+server.get('/api/positions/open', async (req, res, next) => {
+    res.send(200, await services.positionService.getOpenPositions());
+    return next();
+});
+
+server.get('/api/recruiters/:alias/positions', async (req, res, next) => {
+    res.send(200, await services.positionService.getOpenPositions(/*req.params.alias*/));
     return next();
 });
 

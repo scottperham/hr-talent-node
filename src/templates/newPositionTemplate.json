@@ -4,115 +4,150 @@
     "version": "1.4",
     "body": [
         {
-            "type": "TextBlock",
-            "text": "Use the form below to create the new position",
-            "wrap": true,
-            "isSubtle": true,
-            "size": "Small"
-        },
-        {
-            "type": "Input.Text",
-            "placeholder": "E.g. Senior PM",
-            "id": "jobTitle",
-            "label": "Title"
-        },
-        {
-            "type": "ColumnSet",
-            "columns": [
+            "$when": "${not(signedIn)}",
+            "type": "Container",
+            "items": [
                 {
-                    "type": "Column",
-                    "width": "stretch",
-                    "items": [
-                        {
-                            "type": "Input.ChoiceSet",
-                            "choices": [
-                                {
-                                    "$data": "${levels}",
-                                    "title": "${string($data)}",
-                                    "value": "${string($data)}"
-                                }
-                            ],
-                            "placeholder": "Select level",
-                            "label": "Level",
-                            "id": "jobLevel"
-                        }
-                    ]
+                    "type": "TextBlock",
+                    "text": "You need to be signed in to create a new position",
+                    "wrap": true,
+                    "horizontalAlignment": "Center"
                 },
                 {
-                    "type": "Column",
-                    "width": "stretch",
-                    "items": [
-                        {
-                            "type": "Input.Date",
-                            "label": "Post by",
-                            "id": "jobDate",
-                            "placeholder": "Posting date"
-                        }
-                    ]
+                    "type": "TextBlock",
+                    "text": "Type 'signin' in the chat with your bot",
+                    "wrap": true,
+                    "horizontalAlignment": "Center"
+                },
+                {
+                    "type": "TextBlock",
+                    "text": ":(",
+                    "wrap": true,
+                    "horizontalAlignment": "Center",
+                    "style": "heading",
+                    "size": "ExtraLarge",
+                    "fontType": "Default",
+                    "isSubtle": true
                 }
             ]
         },
         {
-            "type": "ColumnSet",
-            "columns": [
+            "$when": "${signedIn}",
+            "type": "Container",
+            "items": [
                 {
-                    "type": "Column",
-                    "width": "stretch",
-                    "items": [
+                    "type": "TextBlock",
+                    "text": "Use the form below to create the new position",
+                    "wrap": true,
+                    "isSubtle": true,
+                    "size": "Small"
+                },
+                {
+                    "type": "Input.Text",
+                    "placeholder": "E.g. Senior PM",
+                    "id": "jobTitle",
+                    "label": "Title"
+                },
+                {
+                    "type": "ColumnSet",
+                    "columns": [
                         {
-                            "type": "Input.ChoiceSet",
-                            "choices": [
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
                                 {
-                                    "$data": "${locations}",
-                                    "title": "${city}",
-                                    "value": "${string(id)}"
+                                    "type": "Input.ChoiceSet",
+                                    "choices": [
+                                        {
+                                            "$data": "${levels}",
+                                            "title": "${string($data)}",
+                                            "value": "${string($data)}"
+                                        }
+                                    ],
+                                    "placeholder": "Select level",
+                                    "label": "Level",
+                                    "id": "jobLevel"
                                 }
-                            ],
-                            "placeholder": "Select location",
-                            "id": "jobLocation",
-                            "label": "Location"
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "Input.Date",
+                                    "label": "Post by",
+                                    "id": "jobDate",
+                                    "placeholder": "Posting date"
+                                }
+                            ]
                         }
                     ]
                 },
                 {
-                    "type": "Column",
-                    "width": "stretch",
-                    "items": [
+                    "type": "ColumnSet",
+                    "columns": [
                         {
-                            "type": "Input.ChoiceSet",
-                            "choices": [
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
                                 {
-                                    "$data": "${recruiters}",
-                                    "title": "${name}",
-                                    "value": "${string(id)}"
+                                    "type": "Input.ChoiceSet",
+                                    "choices": [
+                                        {
+                                            "$data": "${locations}",
+                                            "title": "${city}",
+                                            "value": "${string(id)}"
+                                        }
+                                    ],
+                                    "placeholder": "Select location",
+                                    "id": "jobLocation",
+                                    "label": "Location"
                                 }
-                            ],
-                            "placeholder": "Select recruiter",
-                            "id": "jobHiringManager",
-                            "label": "Hiring Manager"
+                            ]
+                        },
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "Input.ChoiceSet",
+                                    "choices": [
+                                        {
+                                            "$data": "${recruiters}",
+                                            "title": "${name}",
+                                            "value": "${string(id)}"
+                                        }
+                                    ],
+                                    "placeholder": "Select recruiter",
+                                    "id": "jobHiringManager",
+                                    "label": "Hiring Manager"
+                                }
+                            ]
                         }
                     ]
-                }
-            ]
-        },
-        {
-            "type": "Input.Text",
-            "placeholder": "E.g. Senior Product Manager in charge of driving complicated work and stuff.",
-            "label": "Description",
-            "isMultiline": true,
-            "id": "jobDescription"
-        },
-        {
-            "type": "ActionSet",
-            "actions": [
+                },
                 {
-                    "type": "Action.Submit",
-                    "title": "Create position",
-                    "style": "positive",
-                    "data": {
-                        "commandId": "createPosition"
-                    }
-                }
+                    "type": "Input.Text",
+                    "placeholder": "E.g. Senior Product Manager in charge of driving complicated work and stuff.",
+                    "label": "Description",
+                    "isMultiline": true,
+                    "id": "jobDescription"
+                },
+                {
+                    "type": "ActionSet",
+                    "actions": [
+                        {
+                            "type": "${if(source == 'chat', 'Action.Execute', 'Action.Submit')}",
+                            "title": "Create position",
+                            "style": "positive",
+                            "verb": "CreatePosition",
+                            "data": {
+                                "commandId": "createPosition"
+                            }
+                        }
+                    ]
+                }  
             ]
         }
     ]

@@ -27,7 +27,7 @@
                 },
                 {
                     "title": "Applicants:",
-                    "value": "${applicants}"
+                    "value": "${count(candidates)}"
                 },
                 {
                     "title": "Hiring Manager:",
@@ -47,7 +47,8 @@
             "title": "Share position",
             "$when": "${renderActions}",
             "data": {
-                "commandId": "sharePosition"
+                "commandId": "sharePosition",
+                "positionId": "${id}"
             },
             "style": "positive"
         },

@@ -18,10 +18,9 @@ export class PositionDetailsCommand extends CommandBase {
             return;
         }
 
-        const activity = MessageFactory.attachment({
-            contentType: CardFactory.contentTypes.adaptiveCard,
-            content: this.services.templatingService.getPositionTemplate(position)
-        });
+        const card = this.services.templatingService.getPositionTemplate(position);
+
+        const activity = MessageFactory.attachment(card);
 
         await turnContext.sendActivity(activity);
     }

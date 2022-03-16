@@ -46,9 +46,10 @@ export class PositionService extends DataService<Position> {
         return await this.filter(x => x.externalId == searchText || x.id == parseInt(<string>searchText), maxResults, true);
     }
 
-    public async createPosition(position: Position) : Promise<void> {
+    public async createPosition(position: Position) : Promise<Position> {
         position.id = this.getNextId();
         this.decorate(position);
         await this.add(position);
+        return <Position>(await this.getById(position.id, true));
     }
 }

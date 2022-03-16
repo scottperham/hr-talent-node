@@ -8,7 +8,7 @@ export class CandidateService extends DataService<Candidate> {
         super("candidates", services)
     }
 
-    protected async expand(obj: Candidate): Promise<Candidate> {
+    public async expand(obj: Candidate): Promise<Candidate> {
         obj.location = await this.services.locationService.getById(obj.locationId);
         obj.position = await this.services.positionService.getById(obj.positionId);
         obj.interviews = await this.services.interviewService.getByCandidateId(obj.id);
@@ -49,15 +49,12 @@ export class CandidateService extends DataService<Candidate> {
 
     public async saveComment(comment: Comment) : Promise<void> {
         const candidate = await this.getReference(comment.candidateId);
+
         if (!candidate) {
             return;
         }
 
-        if (!candidate.comments) {
-            candidate.comments = [];
-        }
-
-        candidate.comments.push(comment);
+        (candidate.comments || (candidate.comments = [])).push(comment);
     }
 }
 
