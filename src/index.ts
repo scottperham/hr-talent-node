@@ -5,6 +5,7 @@ import { TeamsTalentMgmtBot } from './bots/bot';
 import { ServiceContainer } from "./services/data/serviceContainer";
 import { ClientApiService } from './services/clientApiService';
 import express from 'express';
+import { aadAppAuth, botFrameworkAuth } from './auth';
 
 const env_file = path.join(__dirname, "..", ".env");
 dotenv.config({path: env_file});
@@ -64,6 +65,14 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use("/StaticViews", express.static(staticViewsPath));
+app.use("/api/messages", botFrameworkAuth);
+app.use("/api/*", (req, res, next) => {
+    if (req.baseUrl == "/api/messages") {
+        next();
+        return;
+    }
+    aadAppAuth(req, res, next);
+} );
 
 const port = process.env.port || process.env.PORT || 3978;
 
