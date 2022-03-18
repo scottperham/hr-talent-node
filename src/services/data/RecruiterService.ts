@@ -2,7 +2,6 @@ import { Recruiter, RecruiterRole } from "./dtos";
 import { DataService } from "./dataService";
 import { ServiceContainer } from "./serviceContainer";
 
-
 export class RecruiterService extends DataService<Recruiter> {
 
     constructor(services: ServiceContainer) {

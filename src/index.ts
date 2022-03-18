@@ -3,18 +3,11 @@ import * as dotenv from 'dotenv';
 import { ServiceContainer } from "./services/data/serviceContainer";
 import express from 'express';
 import configureClientApi from './clientApi';
-import configureBotApi from './botApi';
+import configureBotApi, { configureAdapter } from './botApi';
+import configureNotificationApi from './notificationApi';
 
 const env_file = path.join(__dirname, "..", ".env");
 dotenv.config({path: env_file});
-
-const sampleDataPath = path.join(__dirname, "..", "src\\sampleData");
-const templatesPath = path.join(__dirname, "..", "src\\templates");
-const staticViewsPath = path.join(__dirname, "..", "src\\StaticViews");
-
-const services = new ServiceContainer();
-services.loadData(sampleDataPath);
-services.loadTemplates(templatesPath);
 
 const app = express();
 
@@ -25,10 +18,23 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+const staticViewsPath = path.join(__dirname, "..", "src\\StaticViews");
 app.use("/StaticViews", express.static(staticViewsPath));
 
-configureBotApi(app, services);
+const adapter = configureAdapter();
+
+const services = new ServiceContainer(adapter);
+
+const sampleDataPath = path.join(__dirname, "..", "src\\sampleData");
+services.loadData(sampleDataPath);
+
+const templatesPath = path.join(__dirname, "..", "src\\templates");
+services.loadTemplates(templatesPath);
+
+configureBotApi(app, services, adapter);
 configureClientApi(app, services);
+configureNotificationApi(app, services, adapter);
 
 const port = process.env.port || process.env.PORT || 3978;
 

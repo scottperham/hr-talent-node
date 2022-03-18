@@ -1,79 +1,84 @@
-import { RequestHandler, Request, Response } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import { RequestHandler, Request, Response, NextFunction } from 'express';
+import jwt, { GetPublicKeyOrSecret, JwtHeader, JwtPayload } from 'jsonwebtoken';
+import jwksClient, {CertSigningKey, RsaSigningKey} from 'jwks-rsa';
 
 export const botFrameworkAuth : RequestHandler = (req, res, next) => {
     
-    const token = commonAuth(req, res);
-    
+    const token = getTokenFromHeader(req);
+
     if (!token) {
-        return;
+        return res.sendStatus(401);
     }
 
-    if (token.iss !== "https://api.botframework.com") {
-        res.status(401).send("This endpoint only accepts tokens from bot service");
-        return;
-    }
-
-    next();
+    commonAuth(
+        token, 
+        res, 
+        "https://api.botframework.com", 
+        getSigningKeyCallback("https://login.botframework.com/v1/.well-known/keys"), 
+        next);
 };
 
 export const aadAppAuth : RequestHandler = (req, res, next) => {
-    const token = commonAuth(req, res);
-    
+
+    const token = getTokenFromHeader(req);
+
     if (!token) {
-        return;
+        return res.sendStatus(401);
     }
 
-    if (!token.tid) {
+    const decoded = <JwtPayload>jwt.decode(token);
+
+    if (!decoded.tid) {
         res.status(403).send("No tenant id in token");
         return;
     }
 
-    if (token.iss !== `https://login.microsoftonline.com/${token.tid}/v2.0`) {
-        res.status(401).send("This endpoint only accepts tokens issued by your app registration");
-        return;
-    }
-
-    next();
+    commonAuth(
+        token, 
+        res, 
+        `https://login.microsoftonline.com/${decoded.tid}/v2.0`, 
+        getSigningKeyCallback(`https://login.microsoftonline.com/${decoded.tid}/discovery/v2.0/keys`), 
+        next);
 };
 
-const commonAuth : (req: Request, res: Response) => JwtPayload | undefined = (req, res) => {
-    const token = getTokenFromHeader(req);
-    if (!token) {
-        res.status(403);
-        return undefined;
-    }
-    const result = validateToken(token);
-    if (!result.valid) {
-        res.status(401).send(result.error);
-        return undefined;
-    }
+const getSigningKeyCallback: (jwksUri: string) => GetPublicKeyOrSecret = (jwksUri) => {
+    
+    const getSigningKey: GetPublicKeyOrSecret = (header, callback) => {
+        jwksClient({
+            jwksUri
+        }).getSigningKey(header.kid, (err, key) => {
+            const signingKey = (<CertSigningKey>key).publicKey || (<RsaSigningKey>key).rsaPublicKey;
+            callback(null, signingKey);
+        });
+    };
 
-    if (token.aud !== process.env.MicrosoftAppId) {
-        res.status(401).send("This endpoint only accepts tokens where the audience is your AAD app");
-        return undefined;
-    }
-
-    return token;
-};
-
-const validateToken : (token: JwtPayload) => {error?: string, valid: boolean} = (token) => {
-    const nowPlusSkew = new Date();
-    nowPlusSkew.setMinutes(nowPlusSkew.getMinutes() + 5, nowPlusSkew.getSeconds());
-    const nowPlusSkewSinceEpoch = Math.round(nowPlusSkew.getTime() / 1000);
-
-    if (token.iat && nowPlusSkewSinceEpoch < token.iat) {
-        return {error: "Token not yet valid", valid: false}
-    }
-
-    if (token.exp && nowPlusSkewSinceEpoch > token.exp) {
-        return {error: "Token has expired", valid: false}
-    }
-
-    return {valid: true};
+    return getSigningKey;
 }
 
-const getTokenFromHeader : (req: Request) => JwtPayload | undefined = (req) => {
+const commonAuth : (token: string, res: Response, issuer: string, getSigningKeys: GetPublicKeyOrSecret, next: NextFunction) => void = (token, res, issuer, getSigningKeys, next) => {
+
+    if (!token) {
+        res.status(401);
+        return undefined;
+    }
+
+    const validationOptions = {
+        audience: process.env.MicrosoftAppId,
+        issuer
+    }
+
+    jwt.verify(token, getSigningKeys, validationOptions, (err, payload) => {
+        if (err) {
+            console.log(err);
+            return res.sendStatus(403);
+        }
+
+        next();
+    });
+};
+
+
+const getTokenFromHeader : (req: Request) => string | undefined = (req) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
@@ -84,17 +89,5 @@ const getTokenFromHeader : (req: Request) => JwtPayload | undefined = (req) => {
         return undefined;
     }
 
-    const token = authHeader.split(" ")[1];
-
-    if (!token) {
-        return undefined;
-    }
-
-    const decoded = jwt.decode(token);
-
-    if (!decoded) {
-        return undefined;
-    }
-
-    return decoded as JwtPayload;
+    return authHeader.split(" ")[1];
 }

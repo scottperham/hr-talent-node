@@ -4,6 +4,9 @@ import { TemplatingService } from "./templatingService";
 import { LocationService } from "./locationService";
 import { InterviewService } from "./interviewService";
 import { CandidateService } from "./candidateService";
+import { CloudAdapter } from "botbuilder";
+import { NotificationService } from "./notificationService";
+import { GraphApiService } from "./graphApiService";
 
 
 export class ServiceContainer {
@@ -13,14 +16,18 @@ export class ServiceContainer {
     public positionService: PositionService;
     public recruiterService: RecruiterService;
     public templatingService: TemplatingService;
+    public notificationService: NotificationService;
+    public graphApiService: GraphApiService;
 
-    constructor() {
+    constructor(adapter: CloudAdapter) {
         this.candidateService = new CandidateService(this);
         this.interviewService = new InterviewService(this);
         this.locationService = new LocationService(this);
         this.positionService = new PositionService(this);
         this.recruiterService = new RecruiterService(this);
         this.templatingService = new TemplatingService();
+        this.notificationService = new NotificationService(this, adapter);
+        this.graphApiService = new GraphApiService();
     }
 
     public loadData(sampleDataPath: string) {

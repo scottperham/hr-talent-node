@@ -1,17 +1,20 @@
 {
   "dependencies": {
+    "@microsoft/microsoft-graph-client": "^3.0.2",
     "adaptivecards": "^2.10.0",
     "adaptivecards-templating": "^2.2.0",
     "axios": "^0.26.1",
     "botbuilder": "^4.15.0",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "jwks-rsa": "^2.0.5"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.13",
     "@types/jsonwebtoken": "^8.5.8",
+    "@types/microsoft-graph": "^2.13.0",
     "@types/node": "^17.0.21",
     "@types/restify": "^8.5.4"
   }
