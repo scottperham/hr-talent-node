@@ -145,7 +145,7 @@ export class TeamsTalentMgmtBot extends TeamsActivityHandler {
     }
 
     protected async handleTeamsFileConsentDecline(context: TurnContext, fileConsentCardResponse: FileConsentCardResponse): Promise<void> {
-        await this.invokeHandler.handleFileConsent(context, fileConsentCardResponse, true);
+        await this.invokeHandler.handleFileConsent(context, fileConsentCardResponse, false);
     }
 
     private hasFiles(activity: Activity) : boolean {

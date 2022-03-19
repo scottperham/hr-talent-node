@@ -1,5 +1,5 @@
 import { RequestHandler, Request, Response, NextFunction } from 'express';
-import jwt, { GetPublicKeyOrSecret, JwtHeader, JwtPayload } from 'jsonwebtoken';
+import jwt, { GetPublicKeyOrSecret, JwtPayload } from 'jsonwebtoken';
 import jwksClient, {CertSigningKey, RsaSigningKey} from 'jwks-rsa';
 
 export const botFrameworkAuth : RequestHandler = (req, res, next) => {

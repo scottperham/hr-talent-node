@@ -3,7 +3,7 @@ import { AdaptiveCardInvokeResponse, Attachment, CardFactory, FileConsentCardRes
 import { convertInvokeActionDataToComment, convertInvokeActionDataToInterview, convertInvokeActionDataToPosition, Position } from "./data/dtos";
 import { ServiceContainer } from "./data/serviceContainer";
 import { TokenProvider } from "./tokenProvider";
-import axios from "axios";
+import "isomorphic-fetch";
 
 export class InvokeActivityHandler {
 
@@ -170,12 +170,31 @@ export class InvokeActivityHandler {
 
     public async handleFileConsent(turnContext: TurnContext, response: FileConsentCardResponse, accept: boolean): Promise<void> {
 
-        if (!accept) {
+        const candidate = await this.services.candidateService.getById(parseInt(response.context.candidateId));
+
+        if (!candidate) {
             return;
         }
 
-        const candidate = await this.services.candidateService.getById(parseInt(response.context.candidateId));
-        if (!candidate || !response.uploadInfo) {
+        if (!await this.tokenProvider.hasToken(turnContext)) {
+            const declineAttachment = this.services.templatingService.getCandidateSummaryFailedTemplate(candidate, "You must be signed in to download a candidate summary");
+            const updateActivityWithDecline = MessageFactory.attachment(declineAttachment);
+            updateActivityWithDecline.id = turnContext.activity.replyToId;
+
+            await turnContext.updateActivity(updateActivityWithDecline);
+            return;
+        }
+
+        if (!accept) {
+            const declineAttachment = this.services.templatingService.getCandidateSummaryFailedTemplate(candidate, "Declined");
+            const updateActivityWithDecline = MessageFactory.attachment(declineAttachment);
+            updateActivityWithDecline.id = turnContext.activity.replyToId;
+
+            await turnContext.updateActivity(updateActivityWithDecline);
+            return;
+        }
+
+        if (!response.uploadInfo) {
             return;
         }
 
@@ -185,15 +204,24 @@ export class InvokeActivityHandler {
         }
         const arrayBuffer = Buffer.from(charArray);
 
-        const uploadResponse = await axios.put(response.uploadInfo?.uploadUrl!, arrayBuffer, {
+        await fetch(response.uploadInfo?.uploadUrl!, {
+            body: arrayBuffer,
             headers: {
                 "content-range": `bytes 0-${arrayBuffer.byteLength - 1}/${arrayBuffer.byteLength}`,
                 "content-type": "application/octet-stream"
-            }
+            },
+            method: "PUT"
         });
 
         const attachment = this.services.templatingService.getFileInfoCard(response.uploadInfo);
         const activity = MessageFactory.attachment(attachment);
+
+        const allowCard = this.services.templatingService.getCandidateSummaryAllowTemplate(candidate);
+
+        const updateActivity = MessageFactory.attachment(allowCard);
+        updateActivity.id = turnContext.activity.replyToId;
+
+        await turnContext.updateActivity(updateActivity);
 
         await turnContext.sendActivity(activity);
     }

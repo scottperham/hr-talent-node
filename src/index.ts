@@ -4,7 +4,7 @@ import { ServiceContainer } from "./services/data/serviceContainer";
 import express from 'express';
 import configureClientApi from './clientApi';
 import configureBotApi, { configureAdapter } from './botApi';
-import configureNotificationApi from './notificationApi';
+import configureNotificationApi from './utilityApi';
 
 const env_file = path.join(__dirname, "..", ".env");
 dotenv.config({path: env_file});

@@ -89,6 +89,18 @@ export class TemplatingService {
         }
     }
 
+    public getCandidateSummaryAllowTemplate(candidate: Candidate): Attachment {
+        return CardFactory.thumbnailCard(`Download candidate summary for ${candidate.name}`, undefined, undefined, {
+            text: `The summary for ${candidate.name} is now available for download`
+        });
+    }
+
+    public getCandidateSummaryFailedTemplate(candidate: Candidate, text: string): Attachment {
+        return CardFactory.thumbnailCard(`Download candidate summary for ${candidate.name}`, undefined, undefined, {
+            text
+        });
+    }
+
     public getFileInfoCard(fileInfo: FileUploadInfo) : Attachment {
         return {
             contentType: "application/vnd.microsoft.teams.card.file.info",
