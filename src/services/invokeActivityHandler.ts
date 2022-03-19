@@ -33,7 +33,7 @@ export class InvokeActivityHandler {
             case "createPosition":
                 let position = convertInvokeActionDataToPosition(action.data) ;
                 position = await this.services.positionService.createPosition(position);
-                const card = this.services.templatingService.getPositionTemplate(position, true);
+                const card = this.services.templatingService.getPositionAttachment(position, true);
                 return {
                     task: {
                         type: "continue",
@@ -47,7 +47,7 @@ export class InvokeActivityHandler {
                 }
             case "sharePosition": {
                 const position = await this.services.positionService.getById(parseInt(action.data.positionId), true);
-                const positionCard = this.services.templatingService.getPositionTemplate(<Position>position);
+                const positionCard = this.services.templatingService.getPositionAttachment(<Position>position);
                 return {
                     composeExtension: {
                         attachments: [positionCard],
@@ -68,7 +68,7 @@ export class InvokeActivityHandler {
             const recruiters = await this.services.recruiterService.getAllHiringManagers();
             const signedIn = await this.tokenProvider.hasToken(context);
 
-            const card = this.services.templatingService.getNewPositionTemplate(recruiters, locations, "compose", signedIn);
+            const card = this.services.templatingService.getNewPositionAttachment(recruiters, locations, "compose", signedIn);
 
             return Promise.resolve({
                 task: {
@@ -109,8 +109,8 @@ export class InvokeActivityHandler {
                 
                 positions.forEach(x => {
                     attachments.push({
-                        ...this.services.templatingService.getPositionTemplate(x),
-                        preview: this.services.templatingService.getPositionPreviewTemplate(x)
+                        ...this.services.templatingService.getPositionAttachment(x),
+                        preview: this.services.templatingService.getPositionPreviewAttachment(x)
                     })
                 });
                 break;
@@ -119,8 +119,8 @@ export class InvokeActivityHandler {
                 const recruiters = await this.services.recruiterService.getAll(true);
                 candidates.forEach(x => {
                     attachments.push({
-                        ...this.services.templatingService.getCandidateTemplate(x, recruiters, "", source === "compose"),
-                        preview: this.services.templatingService.getCandidatePreviewTemplate(x)
+                        ...this.services.templatingService.getCandidateAttachment(x, recruiters, "", source === "compose"),
+                        preview: this.services.templatingService.getCandidatePreviewAttachment(x)
                     })
                 });
                 break;
@@ -145,7 +145,7 @@ export class InvokeActivityHandler {
         }
 
         await this.services.candidateService.saveComment(comment);
-        return this.getAdaptiveCardInvokeResponse(200, this.services.templatingService.getCandidateTemplate(candidate, recruiters, "Comment added"));
+        return this.getAdaptiveCardInvokeResponse(200, this.services.templatingService.getCandidateAttachment(candidate, recruiters, "Comment added"));
     }
 
     public async handleScheduleInterview(invokeData: any): Promise<AdaptiveCardInvokeResponse> {
@@ -158,13 +158,13 @@ export class InvokeActivityHandler {
         }
 
         await this.services.interviewService.scheduleInterview(interview);
-        return this.getAdaptiveCardInvokeResponse(200, this.services.templatingService.getCandidateTemplate(candidate, recruiters, "Interview scheduled"));
+        return this.getAdaptiveCardInvokeResponse(200, this.services.templatingService.getCandidateAttachment(candidate, recruiters, "Interview scheduled"));
     }
 
     public async handleCreatePosition(invokeData: any): Promise<AdaptiveCardInvokeResponse> {
         let position = convertInvokeActionDataToPosition(invokeData);
         position = await this.services.positionService.createPosition(position);
-        const card = this.services.templatingService.getPositionTemplate(position, true);
+        const card = this.services.templatingService.getPositionAttachment(position, true);
         return this.getAdaptiveCardInvokeResponse(200, card);
     }
 
@@ -177,7 +177,7 @@ export class InvokeActivityHandler {
         }
 
         if (!await this.tokenProvider.hasToken(turnContext)) {
-            const declineAttachment = this.services.templatingService.getCandidateSummaryFailedTemplate(candidate, "You must be signed in to download a candidate summary");
+            const declineAttachment = this.services.templatingService.getCandidateSummaryFailedAttachment(candidate, "You must be signed in to download a candidate summary");
             const updateActivityWithDecline = MessageFactory.attachment(declineAttachment);
             updateActivityWithDecline.id = turnContext.activity.replyToId;
 
@@ -186,7 +186,7 @@ export class InvokeActivityHandler {
         }
 
         if (!accept) {
-            const declineAttachment = this.services.templatingService.getCandidateSummaryFailedTemplate(candidate, "Declined");
+            const declineAttachment = this.services.templatingService.getCandidateSummaryFailedAttachment(candidate, "Declined");
             const updateActivityWithDecline = MessageFactory.attachment(declineAttachment);
             updateActivityWithDecline.id = turnContext.activity.replyToId;
 
@@ -213,10 +213,10 @@ export class InvokeActivityHandler {
             method: "PUT"
         });
 
-        const attachment = this.services.templatingService.getFileInfoCard(response.uploadInfo);
+        const attachment = this.services.templatingService.getFileInfoCardAttachment(response.uploadInfo);
         const activity = MessageFactory.attachment(attachment);
 
-        const allowCard = this.services.templatingService.getCandidateSummaryAllowTemplate(candidate);
+        const allowCard = this.services.templatingService.getCandidateSummaryAllowAttachment(candidate);
 
         const updateActivity = MessageFactory.attachment(allowCard);
         updateActivity.id = turnContext.activity.replyToId;

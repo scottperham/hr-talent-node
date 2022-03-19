@@ -2,6 +2,7 @@ import { RequestHandler, Request, Response, NextFunction } from 'express';
 import jwt, { GetPublicKeyOrSecret, JwtPayload } from 'jsonwebtoken';
 import jwksClient, {CertSigningKey, RsaSigningKey} from 'jwks-rsa';
 
+// Express middleware used to authenticate AAD signed, bot service tokens
 export const botFrameworkAuth : RequestHandler = (req, res, next) => {
     
     const token = getTokenFromHeader(req);
@@ -18,6 +19,7 @@ export const botFrameworkAuth : RequestHandler = (req, res, next) => {
         next);
 };
 
+// Express middleware used to authenticate our client requested user token
 export const aadAppAuth : RequestHandler = (req, res, next) => {
 
     const token = getTokenFromHeader(req);

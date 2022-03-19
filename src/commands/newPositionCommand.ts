@@ -18,7 +18,7 @@ export class NewPositionCommand extends CommandBase {
 
         const signedIn = await this.tokenProvider.hasToken(turnContext);
 
-        const card = this.services.templatingService.getNewPositionTemplate(hiringManagers, locations, "chat", signedIn);
+        const card = this.services.templatingService.getNewPositionAttachment(hiringManagers, locations, "chat", signedIn);
 
         const activity = MessageFactory.attachment(card);
 

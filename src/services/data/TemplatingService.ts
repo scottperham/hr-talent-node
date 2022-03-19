@@ -19,7 +19,7 @@ export class TemplatingService {
         this.newPositionTempalte = fs.readFileSync(path.join(templatesPath, "newPositionTemplate.json")).toString();
     }
 
-    public getCandidateTemplate(candidate: Candidate, recruiters: Recruiter[], status?: string, renderActions: boolean = true): Attachment {
+    public getCandidateAttachment(candidate: Candidate, recruiters: Recruiter[], status?: string, renderActions: boolean = true): Attachment {
         const template = new act.Template(JSON.parse(this.candidateTemplate));
         const payload = template.expand({
             $root: {
@@ -35,7 +35,7 @@ export class TemplatingService {
         return CardFactory.adaptiveCard(payload);
     }
 
-    public getCandidatePreviewTemplate(candidate: Candidate): Attachment {
+    public getCandidatePreviewAttachment(candidate: Candidate): Attachment {
         return CardFactory.thumbnailCard(
             candidate.name, 
             [candidate.profilePicture], 
@@ -46,7 +46,7 @@ export class TemplatingService {
         );
     }
 
-    public getCandidatesAsListTemplate(candidates: Candidate[], tapCommand: string, title: string): Attachment {
+    public getCandidatesAsListAttachment(candidates: Candidate[], tapCommand: string, title: string): Attachment {
         const items: CardListItem[] = [];
 
         candidates.forEach(x => {
@@ -72,7 +72,7 @@ export class TemplatingService {
         }
     }
 
-    public getCandidateSummaryTemplate(candidate: Candidate) : Attachment {
+    public getCandidateSummaryAttachment(candidate: Candidate) : Attachment {
         return {
             contentType: "application/vnd.microsoft.teams.card.file.consent",
             content: {
@@ -89,19 +89,19 @@ export class TemplatingService {
         }
     }
 
-    public getCandidateSummaryAllowTemplate(candidate: Candidate): Attachment {
+    public getCandidateSummaryAllowAttachment(candidate: Candidate): Attachment {
         return CardFactory.thumbnailCard(`Download candidate summary for ${candidate.name}`, undefined, undefined, {
             text: `The summary for ${candidate.name} is now available for download`
         });
     }
 
-    public getCandidateSummaryFailedTemplate(candidate: Candidate, text: string): Attachment {
+    public getCandidateSummaryFailedAttachment(candidate: Candidate, text: string): Attachment {
         return CardFactory.thumbnailCard(`Download candidate summary for ${candidate.name}`, undefined, undefined, {
             text
         });
     }
 
-    public getFileInfoCard(fileInfo: FileUploadInfo) : Attachment {
+    public getFileInfoCardAttachment(fileInfo: FileUploadInfo) : Attachment {
         return {
             contentType: "application/vnd.microsoft.teams.card.file.info",
             content: {
@@ -113,7 +113,7 @@ export class TemplatingService {
         }
     }
 
-    public getPositionsAsListTemplate(positions: Position[], tapCommand: string, title: string): Attachment {
+    public getPositionsAsListAttachment(positions: Position[], tapCommand: string, title: string): Attachment {
         const items: CardListItem[] = [];
 
         positions.forEach(x => {
@@ -139,7 +139,7 @@ export class TemplatingService {
         }
     }
 
-    public getPositionPreviewTemplate(position: Position): Attachment {
+    public getPositionPreviewAttachment(position: Position): Attachment {
         return CardFactory.thumbnailCard(
             `${position.title} / ${position.externalId}`, 
             undefined, 
@@ -150,7 +150,7 @@ export class TemplatingService {
         );
     }
 
-    public getPositionTemplate(position: Position, renderActions: boolean = false): Attachment {
+    public getPositionAttachment(position: Position, renderActions: boolean = false): Attachment {
         const template = new act.Template(JSON.parse(this.positionTemplate));
         const payload = template.expand({
             $root: {
@@ -162,7 +162,7 @@ export class TemplatingService {
         return CardFactory.adaptiveCard(payload);
     }
 
-    public getNewPositionTemplate(recruiters: Recruiter[], locations: Location[], source: string, signedIn: boolean): Attachment {
+    public getNewPositionAttachment(recruiters: Recruiter[], locations: Location[], source: string, signedIn: boolean): Attachment {
         const levels = [1,2,3,4,5,6,7];
         const template = new act.Template(JSON.parse(this.newPositionTempalte));
         const payload = template.expand({
@@ -177,7 +177,7 @@ export class TemplatingService {
         return CardFactory.adaptiveCard(payload);
     }
 
-    public getWelcomeMessageCard(): Attachment {
+    public getWelcomeMessageAttachment(): Attachment {
         return CardFactory.heroCard(
             "Hi, I'm Talent bot!",
             undefined,

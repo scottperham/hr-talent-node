@@ -18,7 +18,7 @@ export class PositionDetailsCommand extends CommandBase {
             return;
         }
 
-        const card = this.services.templatingService.getPositionTemplate(position);
+        const card = this.services.templatingService.getPositionAttachment(position);
 
         const activity = MessageFactory.attachment(card);
 

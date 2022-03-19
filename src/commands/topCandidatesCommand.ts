@@ -14,7 +14,7 @@ export class TopCandidatesCommand extends CommandBase {
         const positions = await this.services.positionService.search(text, 15);
 
         if (positions.length == 1) {
-            const candidatesAttachment = this.services.templatingService.getCandidatesAsListTemplate(positions[0].candidates, "candidate details", "Top candidates who have recently applied for this position");
+            const candidatesAttachment = this.services.templatingService.getCandidatesAsListAttachment(positions[0].candidates, "candidate details", "Top candidates who have recently applied for this position");
             await turnContext.sendActivity(MessageFactory.attachment(candidatesAttachment));
             return;
         }
@@ -23,7 +23,7 @@ export class TopCandidatesCommand extends CommandBase {
             await turnContext.sendActivity(`Sorry, there is no position with the id ${text.trim()}`)
         }
 
-        const positionsAttachment = this.services.templatingService.getPositionsAsListTemplate(positions, "top candidates", "Please choose a position to see the top candidates for");
+        const positionsAttachment = this.services.templatingService.getPositionsAsListAttachment(positions, "top candidates", "Please choose a position to see the top candidates for");
         await turnContext.sendActivity(MessageFactory.attachment(positionsAttachment));
     }
 }

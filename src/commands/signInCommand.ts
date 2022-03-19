@@ -21,6 +21,9 @@ export class SignInCommand extends CommandBase {
             return;
         }
 
+        // This is a very specific Adaptive Card that Teams knows how to
+        // handle. It will get a token for the current user and check
+        // that they have consented to your access_as_user scope
         const activity = MessageFactory.attachment({
             contentType: CardFactory.contentTypes.oauthCard,
             content: {

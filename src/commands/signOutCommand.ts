@@ -20,7 +20,9 @@ export class SignOutCommand extends CommandBase {
             return;
         }
 
+        // We are simply going to clear the user state for the token
         await this.tokenProvider.setToken("", turnContext);
+        
         await turnContext.sendActivity("You have been successfuly signed out");
     }
 }

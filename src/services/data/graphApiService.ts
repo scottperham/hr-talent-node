@@ -21,6 +21,7 @@ export enum InstallBotResult {
 
 export class GraphApiService {
 
+    // Gets a token for this application
     public async getAppToken(tenantId: string) : Promise<string | undefined> {
         const cca = new ConfidentialClientApplication({
             auth: {
@@ -30,6 +31,7 @@ export class GraphApiService {
             }
         });
 
+        // Uses the client credential grant process to get a token
         const result = await cca.acquireTokenByClientCredential({
             scopes: ["https://graph.microsoft.com/.default"]
         });
@@ -37,6 +39,7 @@ export class GraphApiService {
         return result?.accessToken;
     }
 
+    // Proactively installs a bot for a user
     public async installBotForUser(aliasUpnOrOid: string, tenantId: string): Promise<InstallBotResult> {
         const token = await this.getAppToken(tenantId);
         if (!token) {
@@ -49,6 +52,7 @@ export class GraphApiService {
             return InstallBotResult.AliasNotFound;
         }
 
+        // https://docs.microsoft.com/en-us/graph/api/appcatalogs-list-teamsapps?view=graph-rest-1.0&tabs=http
         const teamsApps = await graphClient.api("/appCatalogs/teamsApps")
             .filter(`distributionMethod eq 'organization' and externalId eq '${process.env.TeamsAppId}'`)
             .get() as ODataCollection<any>;
@@ -56,6 +60,7 @@ export class GraphApiService {
         if (teamsApps.value.length > 0 && teamsApps.value[0].id) {
 
             try {
+                // https://docs.microsoft.com/en-us/graph/api/userteamwork-post-installedapps?view=graph-rest-1.0&tabs=http
                 await graphClient.api(`/users/${upnOrOid}/teamwork/installedApps`).post({
                     "teamsApp@odata.bind": `https://graph.microsoft.com/v1.0/appCatalogs/teamsApps/${teamsApps.value[0].id}`
                 });
@@ -71,6 +76,7 @@ export class GraphApiService {
         return InstallBotResult.Success;
     }
 
+    // This gets the chat id between a user in a particular tenant and the bot
     public async getProactiveChatIdForUser(aliasUpnOrOid: string, tenantId: string): Promise<ChatIdResponse | undefined> {
         const token = await this.getAppToken(tenantId);
         if (!token) {
@@ -80,6 +86,7 @@ export class GraphApiService {
         return await this.getProactiveChatIdForUserInternal(graphClient, aliasUpnOrOid);
     }
 
+    // This gets the chat id between a user in a particular tenant and the bot
     private async getProactiveChatIdForUserInternal(graphClient: Client, aliasUpnOrOid: string) : Promise<ChatIdResponse> {
         
 
@@ -89,6 +96,7 @@ export class GraphApiService {
             return {};
         }
 
+        // https://docs.microsoft.com/en-us/graph/api/userteamwork-list-installedapps?view=graph-rest-1.0&tabs=http
         const installedApps = await graphClient.api(`/users/${upnOrOid}/teamwork/installedapps`)
             .filter(`teamsApp/externalId eq '${process.env.TeamsAppId}'`)
             .expand("teamsApp")
@@ -98,6 +106,7 @@ export class GraphApiService {
             return {upnOrOid};
         }
 
+        // https://docs.microsoft.com/en-us/graph/api/userscopeteamsappinstallation-get-chat?view=graph-rest-1.0&tabs=http
         const chat = await graphClient.api(`/users/${upnOrOid}/teamwork/installedApps/${installedApps.value[0].id}/chat`).get() as Chat;
 
         return {upnOrOid, chatId: chat.id};
@@ -112,6 +121,7 @@ export class GraphApiService {
             return aliasUpnOrOid;
         }
 
+        // https://docs.microsoft.com/en-us/graph/api/user-list?view=graph-rest-1.0&tabs=http
         const users = await graphClient
             .api("/users")
             .filter(`startsWith(userPrincipalName, '${aliasUpnOrOid}@')`)

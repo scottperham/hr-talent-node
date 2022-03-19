@@ -18,7 +18,7 @@ export class CandidateDetailsCommand extends CommandBase {
             return;
         }
 
-        const card = this.services.templatingService.getCandidateTemplate(candidate, recruiters);
+        const card = this.services.templatingService.getCandidateAttachment(candidate, recruiters);
 
         const activity = MessageFactory.attachment(card);
 
